@@ -1,37 +1,81 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+############################
+# 🔥 IntelliJ IDEA
+############################
+.idea/
 *.iml
-*.ipr
+*.iws
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+############################
+# 🔥 Mac (너 맥 쓰니까 중요)
+############################
+.DS_Store
 
-### VS Code ###
+############################
+# 🔥 Java / Spring / Gradle
+############################
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 로그
+*.log
+
+# 실행파일
+*.jar
+*.war
+*.ear
+
+# 단, 필요하면 이건 허용 (선택)
+!build/libs/*.jar
+
+############################
+# 🔥 Environment (진짜 중요)
+############################
+.env
+.env.*
+application-local.yml
+application-dev.yml
+application-prod.yml
+
+############################
+# 🔥 Node / React
+############################
+node_modules/
+build/
+dist/
+.next/
+coverage/
+
+# 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+############################
+# 🔥 Docker
+############################
+docker-compose.override.yml
+
+# 도커 임시 파일
+*.pid
+*.seed
+
+############################
+# 🔥 Nginx
+############################
+nginx/logs/
+nginx/cache/
+
+############################
+# 🔥 OS / 기타
+############################
+*.swp
+*.swo
+*.tmp
+*.bak
+
+############################
+# 🔥 VSCode (혹시 쓸 수도 있으니까)
+############################
 .vscode/
