@@ -4,6 +4,7 @@
 .idea/
 *.iml
 *.iws
+*.ipr
 out/
 
 ############################
@@ -79,3 +80,15 @@ nginx/cache/
 # 🔥 VSCode (혹시 쓸 수도 있으니까)
 ############################
 .vscode/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
