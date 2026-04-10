@@ -3,7 +3,8 @@ COMPOSE = docker compose
 
 # 빌드 + 실행
 up:
-	$(COMPOSE) up --build
+	$(COMPOSE) build --no-cache
+	$(COMPOSE) up 
 
 # 백그라운드 실행
 up-d:
