@@ -23,11 +23,11 @@ services:
       - "3000:80"
     restart: always
 
-  backend:
+  backendUser:
     build:
-      context:  ./backend # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
+      context: backendUser # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
     image : backend
-    container_name: backend
+    container_name: backendUser
     ports:
       - "4000:80"
     restart: always
