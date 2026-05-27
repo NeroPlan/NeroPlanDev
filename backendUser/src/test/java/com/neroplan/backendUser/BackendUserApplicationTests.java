@@ -1,4 +1,4 @@
-package test.java.com.neroplan.backendUser;
+package com.neroplan.backendUser;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
