@@ -5,7 +5,7 @@
 
 export default function Header() {
     return (
-        <header className="w-full h-4 bg-white flex items-center justify-center px-6">
+        <header className="w-full bg-white flex items-center justify-center py-6">
             <h1 className="text-2xl font-bold">NeroPlan</h1>
         </header>
     )
