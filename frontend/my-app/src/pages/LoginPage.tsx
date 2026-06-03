@@ -22,9 +22,9 @@ export default function LoginPage() {
     };
 
     return (
-            <div className="flex flex-col items-center justify-start h-screen pt-80">
+            <div className="flex flex-col items-center justify-start h-screen pt-60">
                 <Header />
-                <main className="flex-1 flex items-start justify-center pt-5">
+                <main className="flex-1 flex items-start justify-cefhnter pt-5">
                     <div className="flex min-h-screen items-center justify-center">
                         <div className="flex flex-col gap-12 w-64">
                             <button
