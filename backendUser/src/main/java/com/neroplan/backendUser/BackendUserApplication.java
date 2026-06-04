@@ -1,4 +1,4 @@
-package main.java.com.neroplan.backendUser;
+package com.neroplan.backendUser;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

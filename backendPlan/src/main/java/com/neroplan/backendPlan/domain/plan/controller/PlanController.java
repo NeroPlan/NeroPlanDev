@@ -1,15 +1,14 @@
-package com.neroplan.neroplan.domain.plan.controller;
+package com.neroplan.backendPlan.domain.plan.controller;
 
-import com.neroplan.neroplan.domain.plan.dto.CreatePlanRequestDto;
-import com.neroplan.neroplan.domain.plan.dto.CreatePlanResponseDto;
-import com.neroplan.neroplan.domain.plan.dto.GetPlanResponseDto;
-import com.neroplan.neroplan.domain.plan.dto.UpdatePlanRequestDto;
-import com.neroplan.neroplan.domain.plan.service.PlanService;
+import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.neroplan.neroplan.domain.plan.repository.PlanRepository;
 
 import java.util.List;
 

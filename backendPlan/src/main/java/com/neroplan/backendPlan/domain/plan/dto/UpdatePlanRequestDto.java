@@ -1,4 +1,4 @@
-package com.neroplan.neroplan.domain.plan.dto;
+package com.neroplan.backendPlan.domain.plan.dto;
 
 import lombok.*;
 

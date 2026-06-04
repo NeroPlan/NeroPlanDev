@@ -1,9 +1,10 @@
-package com.neroplan.neroplan.domain.plan.entity;
+package com.neroplan.backendPlan.domain.plan.entity;
 
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -23,21 +24,23 @@ public class Plan {
     @NotNull
     private Long priority;
 
-    @NotNull
-    private LocalDateTime createdTime;
+    @Builder.Default
+    private LocalDateTime createdTime = LocalDateTime.now();
 
-    @NotNull
+//    @NotNull
 //    user 객체 생성 시 수정
 //    @ManyToOne
 //    @JoinColumn(name = "user_id")
 //    private User user;
+    @Column(nullable = true)
     private Long userId;
 
-    @NotNull
+//    @NotNull
 //    category 객체 생성 시 수정
 //    @ManyToOne
 //    @JoinColumn(name = "category_id")
 //    private Category category;
+    @Column(nullable = true)
     private Long categoryId;
 
     public void updatePlan(String content, Long priority) {

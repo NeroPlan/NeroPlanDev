@@ -1,4 +1,4 @@
-package com.neroplan.neroplan.domain.plan.entity;
+package com.neroplan.backendPlan.domain.plan.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

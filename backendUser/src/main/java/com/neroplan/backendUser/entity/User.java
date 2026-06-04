@@ -1,4 +1,4 @@
-package main.java.com.neroplan.backendUser.entity;
-~
+package com.neroplan.backendUser.entity;
+
 public class User {
 }
