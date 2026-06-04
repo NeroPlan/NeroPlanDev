@@ -9,15 +9,25 @@ import {
 
 import MainLayout from "../layouts/MainLayout";
 import LoginPage from "../pages/LoginPage";
+import PlanPage from "../pages/PlanPage";
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <MainLayout />,
         children: [
             {
                 index: true,
                 element: <LoginPage />,
+            },
+        ],
+    },
+    {
+        path: "/plan",
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <PlanPage />,
             },
         ],
     },
