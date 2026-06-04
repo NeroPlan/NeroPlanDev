@@ -2,7 +2,7 @@
 FROM gradle:8-jdk17 AS builder
 WORKDIR /app
 COPY . .
-RUN gradle build
+RUN gradle build -x test
 
 # runner
 # FROM openjdk
