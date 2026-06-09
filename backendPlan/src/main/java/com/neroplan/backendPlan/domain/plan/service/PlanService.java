@@ -1,20 +1,18 @@
-package com.neroplan.neroplan.domain.plan.service;
+package com.neroplan.backendPlan.domain.plan.service;
 
-import com.neroplan.neroplan.domain.plan.dto.GetPlanResponseDto;
-import com.neroplan.neroplan.domain.plan.dto.UpdatePlanRequestDto;
-import com.neroplan.neroplan.domain.plan.entity.Plan;
-import com.neroplan.neroplan.domain.plan.repository.PlanRepository;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.entity.Plan;
+import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.neroplan.neroplan.domain.plan.dto.CreatePlanRequestDto;
-import com.neroplan.neroplan.domain.plan.dto.CreatePlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

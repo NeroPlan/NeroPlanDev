@@ -1,6 +1,6 @@
-package com.neroplan.neroplan.domain.plan.dto;
+package com.neroplan.backendPlan.domain.plan.dto;
 
-import com.neroplan.neroplan.domain.plan.entity.Plan;
+import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,10 +1,10 @@
-package com.neroplan.neroplan;
+package com.neroplan.backendPlan;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class NeroplanApplicationTests {
+class BackendPlanApplicationTests {
 
 	@Test
 	void contextLoads() {

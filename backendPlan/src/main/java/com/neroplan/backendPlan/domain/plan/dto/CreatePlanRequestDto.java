@@ -1,12 +1,18 @@
-package com.neroplan.neroplan.domain.plan.dto;
+package com.neroplan.backendPlan.domain.plan.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CreatePlanRequestDto {
 
     @NotBlank(message = "계획 내용은 필수입니다.")
