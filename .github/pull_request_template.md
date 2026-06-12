@@ -1,11 +1,3 @@
----
-name:
-about: 
-title:
-labels:
-assignees:
----
-
 ## 📌 작업 내용
 - 
 
