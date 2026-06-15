@@ -10,6 +10,7 @@ import {
 import MainLayout from "../layouts/MainLayout";
 import LoginPage from "../pages/LoginPage";
 import PlanPage from "../pages/PlanPage";
+import OnboardingPage from "../pages/OnboardingPage";
 
 const router = createBrowserRouter([
     {
@@ -28,6 +29,16 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <PlanPage />,
+            },
+        ],
+    },
+    {
+        path: "/onboarding",
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <OnboardingPage />,
             },
         ],
     },
