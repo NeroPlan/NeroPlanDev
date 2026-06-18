@@ -25,10 +25,20 @@ services:
 
   backendUser:
     build:
-      context: backendPlan # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
+      context: backendUser # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
     image : backend
     container_name: backendUser
     ports:
-      - "4000:80"
+      - "4000:8080"
     restart: always
+    
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_DB: neroplan
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
     
