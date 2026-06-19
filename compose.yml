@@ -26,6 +26,8 @@ services:
   backendUser:
     build:
       context: backendUser # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
+    env_file:
+      - .env
     image : backend
     container_name: backendUser
     ports:
