@@ -2,7 +2,7 @@ package com.neroplan.backendUser.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 
@@ -25,7 +25,7 @@ public class User {
     @Column(name = "profile_image")
     private String profileImage;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate birth;
 
     @Column(length = 10)
@@ -33,4 +33,11 @@ public class User {
 
     @Column(name = "google_id", unique = true)
     private String googleId;
+
+    @Column(unique = true)
+    private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 }
