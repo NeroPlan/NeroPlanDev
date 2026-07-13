@@ -3,9 +3,9 @@ spring:
     name: neroplan
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/neroplan
-    username:
-    password:
+    url: jdbc:postgresql://postgres:5432/neroplan
+    username: postgres
+    password: 1234
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,3 +19,7 @@ spring:
 
 server:
   port: 8080
+
+logging:
+    level:
+      org.springframework.web: DEBUG

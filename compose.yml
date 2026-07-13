@@ -44,6 +44,7 @@ services:
     ports:
       - "4001:8080"
     restart: always
+
     
   postgres:
     image: postgres:17
