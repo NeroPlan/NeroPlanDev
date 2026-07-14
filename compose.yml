@@ -28,11 +28,23 @@ services:
       context: backendUser # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
     env_file:
       - .env
-    image : backend
+    image : backend-user
     container_name: backendUser
     ports:
       - "4000:8080"
     restart: always
+  
+  backendPlan:
+    build:
+      context: backendPlan
+    env_file:
+      - .env
+    image: backend-plan
+    container_name: backendPlan
+    ports:
+      - "4001:8080"
+    restart: always
+
     
   postgres:
     image: postgres:17

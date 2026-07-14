@@ -14,6 +14,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(formLogin -> formLogin.disable())
                 .authorizeHttpRequests(authz -> authz
                         .anyRequest().permitAll()  // 모든 요청 허용 (테스트용)
                 );
