@@ -1,8 +1,11 @@
-// components/PlanPage/AnalyzeButton.tsx
+interface AnalyzeButtonProps {
+    onClick: () => void;
+}
 
-export default function AnalyzeButton() {
+export default function AnalyzeButton({ onClick }: AnalyzeButtonProps) {
     return (
         <button
+            onClick={onClick}
             className="
                 w-full
                 bg-blue-600

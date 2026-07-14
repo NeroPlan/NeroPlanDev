@@ -1,9 +1,23 @@
 // components/common/PlanInput.tsx
+
 import { useState } from "react";
-import { createPlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import { createPlan } from "../../api/plan";
+import AnalyzeButton from "../PlanPage/button";
 
 export default function PlanInput() {
     const [plan, setPlan] = useState("");
+    const [submittedPlans, setSubmittedPlans] = useState<string[]>([]);
+
+    const handleAnalyze = async () => {
+        const trimmedPlan = plan.trim();
+
+        if (!trimmedPlan) return;
+
+        setSubmittedPlans((prev) => [...prev, trimmedPlan]);
+        setPlan("");
+
+        await createPlan(trimmedPlan);
+    };
 
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm">
@@ -13,7 +27,24 @@ export default function PlanInput() {
 
             <hr className="mb-4" />
 
-           <div className="space-y-3">
+            <div className="space-y-3">
+                {submittedPlans.map((submittedPlan, index) => (
+                    <div
+                        key={`${submittedPlan}-${index}`}
+                        className="
+                            w-full
+                            border
+                            rounded-xl
+                            px-3
+                            py-2
+                            bg-gray-100
+                            text-gray-700
+                        "
+                    >
+                        {submittedPlan}
+                    </div>
+                ))}
+
                 <input
                     type="text"
                     value={plan}
@@ -28,24 +59,8 @@ export default function PlanInput() {
                         outline-none
                     "
                 />
-                <button
-                    onClick={() => {
-                        // 여기에 계획을 제출하는 로직을 추가하세요.
-                        console.log("제출된 계획:", plan);
-                        createPlan(plan);
-                    }}
-                    className="
-                        w-full
-                        border
-                        border-dashed
-                        rounded-xl
-                        py-2
-                        text-xl
-                        font-bold
-                    "
-                >
-                    +
-                </button>
+
+                <AnalyzeButton onClick={handleAnalyze} />
             </div>
         </div>
     );
