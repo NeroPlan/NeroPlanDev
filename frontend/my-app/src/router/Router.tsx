@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 
 // URL과 컴포넌트를 연결하는 역할
-
+import MyPage from "../pages/MyPage";
 import MainLayout from "../layouts/MainLayout";
 import LoginPage from "../pages/LoginPage";
 import PlanPage from "../pages/PlanPage";
@@ -39,6 +39,16 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <OnboardingPage />,
+            },
+        ],
+    },
+    {
+        path: "/mypage",
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <MyPage />,
             },
         ],
     },
