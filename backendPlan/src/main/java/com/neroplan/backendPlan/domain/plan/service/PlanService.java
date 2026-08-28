@@ -24,8 +24,9 @@ public class PlanService {
 
     // 1. 플랜 생성
     @Transactional
-    public CreatePlanResponseDto createPlan(CreatePlanRequestDto requestDto) {
+    public CreatePlanResponseDto createPlan(Long userId, CreatePlanRequestDto requestDto) {
         Plan plan = Plan.builder()
+                .userId(userId)
                 .content(requestDto.getContent())
                 .priority(requestDto.getPriority())
                 .build();
@@ -53,8 +54,8 @@ public class PlanService {
 
     // 4. 플랜 수정
     @Transactional
-    public GetPlanResponseDto updatePlan(Long planId, UpdatePlanRequestDto requestDto) {
-        Plan plan = planRepository.findById(planId)
+    public GetPlanResponseDto updatePlan(Long userId, Long planId, UpdatePlanRequestDto requestDto) {
+        Plan plan = planRepository.findByIdAndUserId(planId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority());
         return GetPlanResponseDto.from(plan);
