@@ -46,23 +46,25 @@ public class TokenProvider {
                         now.getTime()
                                 + ACCESS_TOKEN_EXPIRE_TIME
                 );
+        UserPrincipal userPrincipal =
+                (UserPrincipal) authentication.getPrincipal();
+
+        Long userId =
+                userPrincipal.getUserId();
         String role =
                 authentication.getAuthorities()
                         .iterator()
                         .next()
                         .getAuthority();
+
         return Jwts.builder()
-                .setSubject(
-                        authentication.getName()
-                )
+                .setSubject(String.valueOf(userId))
                 .claim(
                         ROLE,
                         role
                 )
                 .setIssuedAt(now)
-                .setExpiration(
-                        expiredDate
-                )
+                .setExpiration(expiredDate)
                 .signWith(
                         secretKey,
                         SignatureAlgorithm.HS512

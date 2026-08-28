@@ -22,7 +22,9 @@ public class CreatePlanRequestDto {
     private Long priority;
 
     // userId의 경우 서버가 토큰에서 추출
+    @NotNull(message = "userId는 필수입니다.")
+     private Long userId;
+
     // categoryId의 경우 서버가 AI를 통해 결정
-    // private Long userId;
     // private Long categoryId;
 }
