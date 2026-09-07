@@ -25,6 +25,11 @@ public class PlanService {
     // 1. 플랜 생성
     @Transactional
     public CreatePlanResponseDto createPlan(Long userId, CreatePlanRequestDto requestDto) {
+        if (userId == null) {
+            throw new IllegalArgumentException(
+                    "JWT에서 userId를 가져오지 못했습니다."
+            );
+        }
         Plan plan = Plan.builder()
                 .userId(userId)
                 .content(requestDto.getContent())
@@ -55,7 +60,7 @@ public class PlanService {
     // 4. 플랜 수정
     @Transactional
     public GetPlanResponseDto updatePlan(Long userId, Long planId, UpdatePlanRequestDto requestDto) {
-        Plan plan = planRepository.findByIdAndUserId(planId, userId)
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority());
         return GetPlanResponseDto.from(plan);

@@ -88,9 +88,11 @@ public class TokenProvider {
                                 ).toString()
                         )
                 );
+        Long userId =
+                Long.valueOf(claims.getSubject());
 
         return new UsernamePasswordAuthenticationToken(
-                claims.getSubject(),
+                userId,
                 token,
                 authorities
         );
