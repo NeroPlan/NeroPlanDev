@@ -9,6 +9,7 @@ import com.neroplan.backendPlan.global.apiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class PlanController {
 
     // 1. 플랜 생성
     @PostMapping
-    public ApiResponse<CreatePlanResponseDto> createPlan(@RequestBody CreatePlanRequestDto requestDto) {
-        return ApiResponse.onSuccess(planService.createPlan(requestDto));
+    public ApiResponse<CreatePlanResponseDto> createPlan(@AuthenticationPrincipal Long userId, @RequestBody CreatePlanRequestDto requestDto) {
+        return ApiResponse.onSuccess(planService.createPlan(userId, requestDto));
     }
 
     // 2. 플랜별 단건 조회 - api 명세에 없으나 단건 조회가 필요한 경우 사용
@@ -33,16 +34,17 @@ public class PlanController {
 
     // 3. 유저별 전체 조회 - date 파라미터를 붙일지 고민하고 수정 필요
     @GetMapping
-    public ApiResponse<List<GetPlanResponseDto>> getPlansByUser(@RequestParam Long userId) {
+    public ApiResponse<List<GetPlanResponseDto>> getPlansByUser(@AuthenticationPrincipal Long userId) {
         return ApiResponse.onSuccess(planService.getPlansByUserId(userId));
     }
 
     // 4. 플랜 수정
     @PatchMapping("/{planId}")
     public ApiResponse<GetPlanResponseDto> updatePlan(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long planId,
             @RequestBody UpdatePlanRequestDto requestDto) {
-        return ApiResponse.onSuccess(planService.updatePlan(planId, requestDto));
+        return ApiResponse.onSuccess(planService.updatePlan(userId, planId, requestDto));
     }
 
     // 5. 플랜 삭제

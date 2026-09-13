@@ -23,7 +23,9 @@ public class UserPrincipal implements OAuth2User {
         this.user = user;
         this.attributes = attributes;
     }
-
+    public Long getUserId() {
+        return user.getUser_id();
+    }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(
