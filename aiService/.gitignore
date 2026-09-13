@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+hrn_bias_analysis/
+notebooks/
+orchestration/
+plan_outcome_prediction/
+neuro_paper_rag_guide.md
+neuro_paper_rag_parameter_reference.md
+README.md
+neuro_paper_rag_tests/
+data/neuro_paper_rag/artifacts/
