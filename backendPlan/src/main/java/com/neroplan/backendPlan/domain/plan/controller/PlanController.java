@@ -33,9 +33,11 @@ public class PlanController {
     }
 
     // 3. 유저별 전체 조회 - date 파라미터를 붙일지 고민하고 수정 필요
+    // 오늘의 계획만 가져와야함.
     @GetMapping
     public ApiResponse<List<GetPlanResponseDto>> getPlansByUser(@AuthenticationPrincipal Long userId) {
-        return ApiResponse.onSuccess(planService.getPlansByUserId(userId));
+        return ApiResponse.onSuccess(planService.getTodayPlansByUserId(userId));
+//        return ApiResponse.onSuccess(planService.getPlansByUserId(userId));
     }
 
     // 4. 플랜 수정
