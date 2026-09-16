@@ -8,7 +8,8 @@ up:
 
 # 백그라운드 실행
 up-d:
-	$(COMPOSE) up --build -d
+	$(COMPOSE) build --no-cache
+	$(COMPOSE) up -d
 
 # 종료
 down:
@@ -21,7 +22,8 @@ logs:
 # 재시작
 re:
 	$(COMPOSE) down
-	$(COMPOSE) up --build -d
+	$(COMPOSE) build --no-cache
+	$(COMPOSE) up 
 
 # 이미지까지 전부 삭제 (fclean)
 fclean:
