@@ -1,9 +1,28 @@
 // components/common/PlanInput.tsx
-import { useState } from "react";
-import { createPlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import { useEffect, useState } from "react";
+import { createPlan, getPlans } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import type { Plan } from "../../api/plan";
 
 export default function PlanInput() {
     const [plan, setPlan] = useState("");
+    const [plans, setPlans] = useState<Plan[]>([]); // 서버에 저장된 계획 목록
+
+    useEffect(() => {
+        getPlans()
+            .then(setPlans)
+            .catch((error) => {
+                console.error("계획 목록을 불러오지 못했습니다:", error);
+            });
+    }, []);
+
+    const handleAddPlan = async () => {
+        if (!plan.trim()) return; // 빈 값 제출 방지
+
+        const createdPlan = await createPlan(plan);
+
+        setPlans((prev) => [...prev, createdPlan]); // 서버가 준 결과를 목록에 추가
+        setPlan(""); // 입력창 초기화
+    };
 
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm">
@@ -29,11 +48,7 @@ export default function PlanInput() {
                     "
                 />
                 <button
-                    onClick={() => {
-                        // 여기에 계획을 제출하는 로직을 추가하세요.
-                        console.log("제출된 계획:", plan);
-                        createPlan(plan);
-                    }}
+                    onClick={handleAddPlan}
                     className="
                         w-full
                         border
@@ -46,6 +61,12 @@ export default function PlanInput() {
                 >
                     +
                 </button>
+
+                <ul className="list-disc pl-6 space-y-1 text-lg font-semibold">
+                    {plans.map((p) => (
+                        <li key={p.planId}>{p.content}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     );
