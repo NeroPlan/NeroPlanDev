@@ -34,11 +34,10 @@ class SearchAgent:
     # 원본 질의와 확장 질의를 함께 사용하여 후보 논문 검색
     def __call__(self, state: PaperRAGState) -> PaperRAGState:
         user_query = state.get("user_query", "")
-        user_plan_context = state.get("user_plan_context", "")
 
         try:
             # 원본 질문 -> 검색용 학술 쿼리로 확장
-            expanded_queries = self._expand_query_with_llm(user_query, user_plan_context)
+            expanded_queries = self._expand_query_with_llm(user_query)
 
             # 원본 질문도 함께 사용
             all_queries = [user_query] + expanded_queries
@@ -82,7 +81,6 @@ class SearchAgent:
                 "last_search_results.json",
                 {
                     "user_query": user_query,
-                    "plan_context": user_plan_context,
                     "llm_provider": get_llm_provider_name(self.llm),
                     "llm_model_name": get_llm_model_name(self.llm),
                     "expanded_queries": expanded_queries,
@@ -109,10 +107,9 @@ class SearchAgent:
             }
 
     # 사용자 질의를 뇌과학 학술 검색용 영어 쿼리 여러 개로 확장
-    def _expand_query_with_llm(self, user_query: str, user_plan_context: str) -> List[str]:
+    def _expand_query_with_llm(self, user_query: str) -> List[str]:
         prompt = (
             f"사용자 상황: {user_query} "
-            f"현재 플랜: {user_plan_context[:200] if user_plan_context else '없음'} "
             "이 상황과 관련된 뇌과학 논문을 찾기 위한 검색 쿼리를 생성해주세요."
         )
 

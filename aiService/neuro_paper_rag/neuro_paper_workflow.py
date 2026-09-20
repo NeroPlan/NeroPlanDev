@@ -74,7 +74,7 @@ def build_rag_pipeline(
 
 
 class NeuroPaperRAGSystem:
-    """5.1 뇌과학 논문 파이프라인을 단독 실행하기 위한 래퍼입니다."""
+    """뇌과학 논문 파이프라인을 단독 실행하기 위한 래퍼입니다."""
 
     def __init__(
         self,
@@ -92,8 +92,7 @@ class NeuroPaperRAGSystem:
     def run(
         self,
         user_query: str,
-        plan_context: str = "",
     ) -> PaperRAGState:
-        """사용자 질의와 계획 문맥을 받아 전체 파이프라인을 실행합니다."""
-        initial_state: PaperRAGState = create_initial_state(user_query, plan_context)
+        """사용자 질의를 받아 전체 파이프라인을 실행합니다."""
+        initial_state: PaperRAGState = create_initial_state(user_query)
         return self.rag_pipeline.invoke(initial_state)
