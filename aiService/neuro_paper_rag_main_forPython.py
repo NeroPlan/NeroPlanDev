@@ -35,12 +35,10 @@ from neuro_paper_rag.neuro_paper_workflow import build_rag_pipeline
 # ── STEP 2. 이번 실행에서 쓸 설정값을 조정 ──
 config.scoring.top_k_retrieve = 10
 config.scoring.top_n_recommend = 3
-config.scoring.mmr_lambda = 0.60
 
 print("ArXiv 카테고리:", config.arxiv.categories)
 print("카테고리당 최대 수집 개수:", config.arxiv.max_results_per_category)
 print("최소 연도:", config.arxiv.min_year)
-print("추천 MMR lambda:", config.scoring.mmr_lambda)
 
 
 # 벡터 저장소, LLM, RAG

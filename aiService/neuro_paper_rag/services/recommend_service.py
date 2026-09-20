@@ -24,7 +24,7 @@ from neuro_paper_rag.adapters.artifact_store_adapter import (
     save_text_artifact,
 )
 from neuro_paper_rag.adapters.vector_store_adapter import NeuroPaperVectorStore
-from neuro_paper_rag.domain.ranking_paper_using_mmr import rank_papers
+from neuro_paper_rag.domain.ranking_paper import rank_papers
 from neuro_paper_rag.neuro_paper_workflow_state import PaperRAGState
 from shared.llm_client import (
     BaseLLMClient,
@@ -106,7 +106,6 @@ class RankAgent:
 
     def __call__(self, state: PaperRAGState) -> PaperRAGState:
         retrieved_papers = state.get("retrieved_papers", [])
-        user_query = state.get("user_query", "")
         plan_keywords = state.get("user_plan_keywords", [])
 
         # 검색 결과가 없으면 이후 섹션 노드로 넘어가지 않도록 빈 결과 반환
@@ -118,14 +117,8 @@ class RankAgent:
             }
 
         try:
-            texts = [f"{paper['title']} {paper.get('summary', '')}" for paper in retrieved_papers]
-            candidate_vectors = self.vector_store.embed_texts(texts)
-            query_vector = self.vector_store.embed_texts([user_query])[0]
-
             recommended = rank_papers(
                 papers=retrieved_papers,
-                query_vector=query_vector,
-                candidate_vectors=candidate_vectors,
                 user_plan_keywords=plan_keywords,
                 top_n=config.scoring.top_n_recommend,
             )

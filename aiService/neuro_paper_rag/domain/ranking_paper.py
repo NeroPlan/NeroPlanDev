@@ -3,9 +3,6 @@
 import math
 from datetime import datetime
 from typing import Any, Dict, List
-
-import numpy as np
-
 from shared.settings import config
 
 CURRENT_YEAR = datetime.now().year
@@ -32,7 +29,6 @@ def compute_plan_relevance_score(
 
 def score_papers(
     papers: List[Dict[str, Any]],
-    candidate_vectors: np.ndarray,
     user_plan_keywords: List[str] = None,
     cfg=None,
 ) -> List[Dict[str, Any]]:
@@ -41,7 +37,7 @@ def score_papers(
     user_plan_keywords = user_plan_keywords or []
 
     scored = []
-    for paper, vector in zip(papers, candidate_vectors):
+    for paper in papers:
         semantic_sim = float(paper.get("score", 0.0))
         recency = compute_recency_score(paper.get("published_year", 2015))
         plan_relevance = compute_plan_relevance_score(
@@ -56,7 +52,6 @@ def score_papers(
         scored.append({
                 **paper,
                 "_raw_score": raw_score,
-                "_vector": vector,
                 "_score_breakdown": {  # ← 추가
                     "semantic_sim": semantic_sim,
                     "recency": recency,
@@ -66,3 +61,24 @@ def score_papers(
 
     scored.sort(key=lambda item: item["_raw_score"], reverse=True)
     return scored
+
+
+def rank_papers(
+    papers: List[Dict[str, Any]],
+    user_plan_keywords: List[str] = None,
+    top_n: int = None,
+    cfg=None,
+) -> List[Dict[str, Any]]:
+    """복합 점수로 정렬한 뒤 top_n개를 그대로 골라 최종 추천 목록을 만듭니다."""
+    cfg = cfg or config.scoring
+    top_n = top_n or cfg.top_n_recommend
+
+    scored = score_papers(papers=papers, user_plan_keywords=user_plan_keywords, cfg=cfg)
+
+    selected_papers = []
+    for item in scored[:top_n]:
+        paper = item.copy()
+        paper["final_score"] = float(paper.pop("_raw_score"))
+        selected_papers.append(paper)
+
+    return selected_papers
