@@ -45,9 +45,9 @@ public class Plan {
     private Long categoryId;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'PENDING'")
+    @ColumnDefault("'FAILED'")
     @Builder.Default
-    private PlanStatus status = PlanStatus.PENDING;
+    private PlanStatus status = PlanStatus.FAILED;
 
     @Column(nullable = true)
     private LocalDateTime completedTime;
