@@ -25,6 +25,10 @@ public class CreatePlanRequestDto {
     @NotNull(message = "userId는 필수입니다.")
      private Long userId;
 
+    // aiService 모델 입력 피처 - 선택 입력
+    private Integer estimatedMinutes;
+    private String timeSlot;
+
     // categoryId의 경우 서버가 AI를 통해 결정
     // private Long categoryId;
 }

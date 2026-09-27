@@ -1,5 +1,6 @@
 package com.neroplan.backendPlan.domain.plan.dto;
 
+import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
 import lombok.*;
 
 @Getter
@@ -9,5 +10,6 @@ public class UpdatePlanRequestDto {
 
     private String content;
     private Long priority;
+    private PlanStatus status;
 
 }
