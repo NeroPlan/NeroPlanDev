@@ -36,6 +36,8 @@ public class PlanService {
                 .userId(userId)
                 .content(requestDto.getContent())
                 .priority(requestDto.getPriority())
+                .estimatedMinutes(requestDto.getEstimatedMinutes())
+                .timeSlot(requestDto.getTimeSlot())
                 .build();
 
         Plan savedPlan = planRepository.save(plan);
@@ -75,6 +77,7 @@ public class PlanService {
         Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority());
+        plan.updateStatus(requestDto.getStatus());
         return GetPlanResponseDto.from(plan);
     }
 
