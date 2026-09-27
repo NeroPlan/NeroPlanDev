@@ -1,6 +1,6 @@
 // components/common/PlanInput.tsx
 import { useEffect, useState } from "react";
-import { createPlan, getPlans, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import { createPlan, deletePlan, getPlans, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
 import type { Plan } from "../../api/plan";
 
 export default function PlanInput() {
@@ -46,6 +46,17 @@ export default function PlanInput() {
         );
         setEditingId(null);
         setEditingContent("");
+    };
+
+    const handleDeletePlan = async (planId: number) => {
+        try {
+            await deletePlan(planId);
+
+            setPlans((prev) => prev.filter((p) => p.planId !== planId));
+            if (editingId === planId) handleCancelEdit();
+        } catch (error) {
+            console.error("계획을 삭제하지 못했습니다:", error);
+        }
     };
 
     return (
@@ -118,6 +129,12 @@ export default function PlanInput() {
                                         className="text-sm text-gray-500"
                                     >
                                         수정
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeletePlan(p.planId)}
+                                        className="text-sm text-red-500"
+                                    >
+                                        삭제
                                     </button>
                                 </>
                             )}
