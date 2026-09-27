@@ -10,9 +10,9 @@ export default function PlanStatusButtons({
     status,
     onChange,
 }: PlanStatusButtonsProps) {
-    // 이미 선택된 상태를 다시 누르면 진행 전(PENDING)으로 되돌림
+    // 이미 선택된 상태를 다시 누르면 기본값(FAILED)으로 되돌림
     const toggle = (target: PlanStatus) => {
-        onChange(status === target ? "PENDING" : target);
+        onChange(status === target ? "FAILED" : target);
     };
 
     return (
