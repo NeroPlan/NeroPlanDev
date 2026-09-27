@@ -97,12 +97,8 @@ class ScoringConfig:
     # semantic_similarity와 달리 "의미"가 아니라 "정확한 단어 일치"를 봄.
     relevance_to_plan_weight: float = 0.30
 
-    # MMR(Maximal Marginal Relevance)에서 관련성과 다양성 사이의 균형 계수.
-    # 1.0에 가까울수록 관련성(점수)만 보고, 0.0에 가까울수록 다양성(중복 억제)을 우선함.
-    mmr_lambda: float = 0.60
-
     # SearchAgent가 Qdrant에서 1차로 가져오는 후보 논문 개수.
-    # 이 중에서 RankAgent + MMR이 최종 top_n_recommend개를 추려냄.
+    # 이 중에서 RankAgent이 최종 top_n_recommend개를 추려냄.
     top_k_retrieve: int = 20
 
     # MergeAgent에게 최종적으로 넘길, 사용자에게 보여줄 추천 논문 개수.

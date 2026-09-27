@@ -35,12 +35,10 @@ from neuro_paper_rag.neuro_paper_workflow import build_rag_pipeline
 # ── STEP 2. 이번 실행에서 쓸 설정값을 조정 ──
 config.scoring.top_k_retrieve = 10
 config.scoring.top_n_recommend = 3
-config.scoring.mmr_lambda = 0.60
 
 print("ArXiv 카테고리:", config.arxiv.categories)
 print("카테고리당 최대 수집 개수:", config.arxiv.max_results_per_category)
 print("최소 연도:", config.arxiv.min_year)
-print("추천 MMR lambda:", config.scoring.mmr_lambda)
 
 
 # 벡터 저장소, LLM, RAG
@@ -107,16 +105,15 @@ run_indexing(mode="skip")
 
 
 # 실행 (검색 + 추천)
-def run_neuro_rag(user_query: str, plan_context: str = ""):
+def run_neuro_rag(user_query: str):
     """사용자 질문과 계획 문맥을 넣어 전체 RAG 파이프라인을 실행합니다."""
-    result = rag_app.invoke(create_initial_state(user_query, plan_context))
+    result = rag_app.invoke(create_initial_state(user_query))
     print(result.get("final_output", "결과가 없습니다."))
     return result
 
 
 result = run_neuro_rag(
-    user_query="집중력이 낮고 공부 중 자꾸 산만해집니다. 오늘 공부 계획에 바로 적용할 수 있는 뇌과학 기반 방법을 알려주세요.",
-    plan_context="오늘 플랜: 오전 수학 공부 2시간, 오후 영어 독해 1시간",
+    user_query="집중력이 낮고 공부 중 자꾸 산만해집니다. 오늘 공부 계획에 바로 적용할 수 있는 뇌과학 기반 방법을 알려주세요. 오늘 플랜: 오전 수학 공부 2시간, 오후 영어 독해 1시간",
 )
 
 

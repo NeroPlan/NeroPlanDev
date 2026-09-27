@@ -18,12 +18,11 @@ _rag_app = build_rag_pipeline(_vector_store, _llm)
 
 class RecommendRequest(BaseModel):
     query: str
-    plan_context: str = ""
 
 # endpoint 수정 필요
 @app.post("/recommend")
 def recommend(req: RecommendRequest):
-    result = _rag_app(create_initial_state(req.query, req.plan_context))
+    result = _rag_app.invoke(create_initial_state(req.query))
     
     return {
         "papers": result.get("recommended_papers", []),

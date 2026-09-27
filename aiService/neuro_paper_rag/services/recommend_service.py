@@ -24,7 +24,7 @@ from neuro_paper_rag.adapters.artifact_store_adapter import (
     save_text_artifact,
 )
 from neuro_paper_rag.adapters.vector_store_adapter import NeuroPaperVectorStore
-from neuro_paper_rag.domain.ranking_paper_using_mmr import rank_papers
+from neuro_paper_rag.domain.ranking_paper import rank_papers
 from neuro_paper_rag.neuro_paper_workflow_state import PaperRAGState
 from shared.llm_client import (
     BaseLLMClient,
@@ -106,7 +106,6 @@ class RankAgent:
 
     def __call__(self, state: PaperRAGState) -> PaperRAGState:
         retrieved_papers = state.get("retrieved_papers", [])
-        user_query = state.get("user_query", "")
         plan_keywords = state.get("user_plan_keywords", [])
 
         # 검색 결과가 없으면 이후 섹션 노드로 넘어가지 않도록 빈 결과 반환
@@ -118,14 +117,8 @@ class RankAgent:
             }
 
         try:
-            texts = [f"{paper['title']} {paper.get('summary', '')}" for paper in retrieved_papers]
-            candidate_vectors = self.vector_store.embed_texts(texts)
-            query_vector = self.vector_store.embed_texts([user_query])[0]
-
             recommended = rank_papers(
                 papers=retrieved_papers,
-                query_vector=query_vector,
-                candidate_vectors=candidate_vectors,
                 user_plan_keywords=plan_keywords,
                 top_n=config.scoring.top_n_recommend,
             )
@@ -160,7 +153,6 @@ class SectionAgent:
         state_key = f"section_{self.section_key}"
         recommended_papers = state.get("recommended_papers", [])
         user_query = state.get("user_query", "")
-        plan_context = state.get("user_plan_context", "")
 
         if not recommended_papers:
             return {state_key: ""}
@@ -169,11 +161,11 @@ class SectionAgent:
             if self.section_key == "time_recommendation":
                 papers_text = _build_papers_context(recommended_papers)
                 time_slot, reason = self._generate_time_recommendation_section(
-                    user_query, papers_text, plan_context
+                    user_query, papers_text
                 )
                 return {state_key: reason, "section_time_slot": time_slot}
 
-            content = self._generate_section(user_query, recommended_papers, plan_context)
+            content = self._generate_section(user_query, recommended_papers)
             return {state_key: content}
         except Exception as exc:
             logger.warning("SectionAgent(%s) failed: %s", self.section_key, exc)
@@ -189,7 +181,6 @@ class SectionAgent:
         self,
         user_query: str,
         recommended_papers: List[Dict[str, Any]],
-        plan_context: str,
     ) -> str:
         papers_text = _build_papers_context(recommended_papers)
         system_prompt = f"""{SHARED_SAFETY_PROMPT}
@@ -201,7 +192,6 @@ class SectionAgent:
 {{"{self.section_key}": "완결된 문단(3~5문장)"}}"""
 
         prompt = f"""사용자 질문: {user_query}
-현재 플랜: {plan_context[:300] if plan_context else '없음'}
 논문 수: {len(recommended_papers)}
 
 추천된 뇌과학 논문 후보:
@@ -214,7 +204,6 @@ class SectionAgent:
         self,
         user_query: str,
         papers_text: str,
-        plan_context: str,
     ) -> tuple[str, str]:
         """아침/점심/저녁/밤 중 하나를 명시적으로 고르고, 그 선택을
         {"time_slot": "<시간대>", "reason": "<이유>"} 형태의 JSON으로 반환합니다.
@@ -231,7 +220,6 @@ class SectionAgent:
 {{"time_slot": "{slots_text} 중 하나", "reason": "왜 그 시간대인지 근거 논문과 함께 3~5문장으로 설명"}}"""
 
         prompt = f"""사용자 질문: {user_query}
-현재 플랜: {plan_context[:300] if plan_context else '없음'}
 
 추천된 뇌과학 논문 후보:
 {papers_text}"""
@@ -281,7 +269,6 @@ class MergeAgent:
     def __call__(self, state: PaperRAGState) -> PaperRAGState:
         recommended_papers = state.get("recommended_papers", [])
         user_query = state.get("user_query", "")
-        plan_context = state.get("user_plan_context", "")
         if not recommended_papers:
             return {
                 **state,
@@ -307,7 +294,6 @@ class MergeAgent:
             "last_recommendation.json",
             {
                 "user_query": user_query,
-                "plan_context": plan_context,
                 "llm_provider": get_llm_provider_name(self.llm),
                 "llm_model_name": get_llm_model_name(self.llm),
                 "expected_llm_calls": len(SECTION_DEFINITIONS),

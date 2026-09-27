@@ -8,7 +8,6 @@ class PaperRAGState(TypedDict):
     """수집, 검색, 추천 단계가 사용하는 상태 딕셔너리 구조"""
 
     user_query: str
-    user_plan_context: str
     user_plan_keywords: List[str]
     ingested_paper_count: int
     ingest_status: str
@@ -32,7 +31,6 @@ def create_initial_state(user_query: str, plan_context: str = "") -> PaperRAGSta
     """
     return {
         "user_query": user_query,
-        "user_plan_context": plan_context,
         "user_plan_keywords": [],
         "ingested_paper_count": 0,
         "ingest_status": "",
