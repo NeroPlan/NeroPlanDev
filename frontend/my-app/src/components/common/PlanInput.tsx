@@ -1,7 +1,8 @@
 // components/common/PlanInput.tsx
 import { useEffect, useState } from "react";
 import { createPlan, getPlans, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
-import type { Plan } from "../../api/plan";
+import type { Plan, PlanStatus } from "../../api/plan";
+import PlanStatusButtons from "../PlanPage/PlanStatusButtons";
 
 export default function PlanInput() {
     const [plan, setPlan] = useState("");
@@ -46,6 +47,18 @@ export default function PlanInput() {
         );
         setEditingId(null);
         setEditingContent("");
+    };
+
+    const handleChangeStatus = async (planId: number, status: PlanStatus) => {
+        try {
+            const updated = await updatePlan(planId, { status });
+
+            setPlans((prev) =>
+                prev.map((p) => (p.planId === planId ? updated : p))
+            );
+        } catch (error) {
+            console.error("계획 상태를 변경하지 못했습니다:", error);
+        }
     };
 
     return (
@@ -112,13 +125,27 @@ export default function PlanInput() {
                                 </>
                             ) : (
                                 <>
-                                    <span className="flex-1">{p.content}</span>
+                                    <span
+                                        className={`flex-1 ${
+                                            p.status === "COMPLETED"
+                                                ? "line-through text-gray-400"
+                                                : p.status === "POSTPONED"
+                                                    ? "text-gray-400"
+                                                    : ""
+                                        }`}
+                                    >
+                                        {p.content}
+                                    </span>
                                     <button
                                         onClick={() => handleStartEdit(p)}
                                         className="text-sm text-gray-500"
                                     >
                                         수정
                                     </button>
+                                    <PlanStatusButtons
+                                        status={p.status}
+                                        onChange={(status) => handleChangeStatus(p.planId, status)}
+                                    />
                                 </>
                             )}
                         </li>
