@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -53,6 +55,16 @@ public class PlanService {
     @Transactional(readOnly = true)
     public List<GetPlanResponseDto> getPlansByUserId(Long userId) {
         return planRepository.findByUserId(userId).stream()
+                .map(plan -> GetPlanResponseDto.from(plan))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GetPlanResponseDto> getTodayPlansByUserId(Long userId){
+        LocalDateTime   startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime   endOfDay = startOfDay.plusDays(1);
+
+        return planRepository.findByUserIdAndCreatedTimeBetween(userId, startOfDay, endOfDay).stream()
                 .map(plan -> GetPlanResponseDto.from(plan))
                 .toList();
     }
