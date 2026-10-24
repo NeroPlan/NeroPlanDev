@@ -1,3 +1,7 @@
+server:
+  # proxy가 넘겨준 X-Forwarded-* 헤더로 OAuth 리다이렉트 주소(https://배포도메인/...)를 만들기 위해 필요
+  forward-headers-strategy: framework
+
 spring:
   datasource:
     url: ${DB_URL}
@@ -25,3 +29,7 @@ logging:
 
 jwt:
   key: ${JWT_KEY}
+
+app:
+  oauth2:
+    redirect-url: ${OAUTH2_REDIRECT_URL:http://localhost:8080/plan}

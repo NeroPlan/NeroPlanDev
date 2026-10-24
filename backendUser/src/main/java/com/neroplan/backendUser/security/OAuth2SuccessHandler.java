@@ -1,5 +1,6 @@
 package com.neroplan.backendUser.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +19,9 @@ public class OAuth2SuccessHandler
 
     private final TokenProvider tokenProvider;
 
-    private static final String REDIRECT_URL =
-            "http://localhost:8080/plan";
+    // 로그인 성공 후 이동할 프론트 주소 - 배포 환경마다 다르므로 환경변수로 주입
+    @Value("${app.oauth2.redirect-url}")
+    private String redirectUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -35,9 +37,9 @@ public class OAuth2SuccessHandler
                 );
 
         // 프론트로 JWT 전달
-        String redirectUrl =
+        String targetUrl =
                 UriComponentsBuilder
-                        .fromUriString(REDIRECT_URL)
+                        .fromUriString(redirectUrl)
                         .queryParam(
                                 "accessToken",
                                 accessToken
@@ -45,6 +47,6 @@ public class OAuth2SuccessHandler
                         .build()
                         .toUriString();
 
-        response.sendRedirect(redirectUrl);
+        response.sendRedirect(targetUrl);
     }
 }
