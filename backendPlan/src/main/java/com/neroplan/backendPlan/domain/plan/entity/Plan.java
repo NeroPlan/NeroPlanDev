@@ -5,6 +5,7 @@ import com.neroplan.backendPlan.domain.category.entity.Category;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -43,7 +44,8 @@ public class Plan {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(20) default 'TODO'")
+    @ColumnDefault("'TODO'")
+    @Column(nullable = false, length = 20)
     private PlanStatus status = PlanStatus.TODO;
 
     private LocalDateTime completedTime;

@@ -26,3 +26,6 @@ logging:
 
 jwt:
   key: ${JWT_KEY}
+
+ai:
+  base-url: ${AI_BASE_URL:http://aiService:8000}

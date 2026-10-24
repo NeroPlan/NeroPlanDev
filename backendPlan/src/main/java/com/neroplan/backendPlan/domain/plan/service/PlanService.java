@@ -1,16 +1,22 @@
 package com.neroplan.backendPlan.domain.plan.service;
 
+import com.neroplan.backendPlan.domain.category.service.CategoryService;
 import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
+import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
+import com.neroplan.backendPlan.domain.plan.event.PlanChangedEvent;
+import com.neroplan.backendPlan.domain.plan.repository.PlanDetailRepository;
 import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
+import com.neroplan.backendPlan.global.ai.AiClient;
 import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
 import com.neroplan.backendPlan.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +24,11 @@ import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +37,10 @@ import java.util.List;
 public class PlanService {
 
     private final PlanRepository planRepository;
+    private final PlanDetailRepository planDetailRepository;
+    private final CategoryService categoryService;
+    private final AiClient aiClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 1. 플랜 생성
     @Transactional
@@ -41,7 +55,13 @@ public class PlanService {
                 .estimatedMinutes(requestDto.getEstimatedMinutes())
                 .build();
 
+        // 기존 카테고리 범주에 없으면 aiService가 새 카테고리 이름을 만들어 줌 - 실패 시 미분류로 저장
+        aiClient.classifyCategory(requestDto.getContent(), categoryService.getCategoryNames(userId))
+                .map(name -> categoryService.findOrCreate(userId, name))
+                .ifPresent(plan::assignCategory);
+
         Plan savedPlan = planRepository.save(plan);
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, savedPlan.getPlanDate()));
 
         return CreatePlanResponseDto.from(savedPlan);
     }
@@ -64,8 +84,15 @@ public class PlanService {
 
     @Transactional(readOnly = true)
     public List<GetPlanResponseDto> getTodayPlansByUserId(Long userId){
-        return planRepository.findByUserIdAndPlanDate(userId, LocalDate.now()).stream()
-                .map(plan -> GetPlanResponseDto.from(plan))
+        List<Plan> plans = planRepository.findByUserIdAndPlanDate(userId, LocalDate.now());
+        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findByPlanIn(plans).stream()
+                .collect(Collectors.toMap(detail -> detail.getPlan().getPlanId(), Function.identity()));
+
+        // AI 추천 순서대로 정렬, 순서가 없는 계획(분석 전/완료)은 뒤로
+        return plans.stream()
+                .map(plan -> GetPlanResponseDto.from(plan, detailsByPlanId.get(plan.getPlanId())))
+                .sorted(Comparator.comparing(GetPlanResponseDto::getRecommendedOrder,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
     }
 
@@ -75,6 +102,7 @@ public class PlanService {
         Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority(), requestDto.getEstimatedMinutes());
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
         return GetPlanResponseDto.from(plan);
     }
 
@@ -88,6 +116,7 @@ public class PlanService {
         } else {
             plan.cancelComplete();
         }
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
         return GetPlanResponseDto.from(plan);
     }
 
@@ -107,7 +136,10 @@ public class PlanService {
             throw new GeneralException(ErrorStatus._INVALID_POSTPONE_DATE);
         }
 
+        LocalDate fromDate = plan.getPlanDate();
         plan.postpone(toDate);
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, fromDate));
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, toDate));
         return GetPlanResponseDto.from(plan);
     }
 
@@ -116,7 +148,9 @@ public class PlanService {
     public void deletePlan(Long userId, Long planId) {
         Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
+        planDetailRepository.deleteByPlan(plan);
         planRepository.delete(plan);
+        eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
     }
 }
 
