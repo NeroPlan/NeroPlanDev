@@ -1,9 +1,14 @@
 package com.neroplan.backendPlan.domain.plan.service;
 
+import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
+import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
 import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
+import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
+import com.neroplan.backendPlan.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -71,6 +76,39 @@ public class PlanService {
         Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority());
+        return GetPlanResponseDto.from(plan);
+    }
+
+    // 6. 플랜 완료 처리 / 완료 취소
+    @Transactional
+    public GetPlanResponseDto completePlan(Long userId, Long planId, CompletePlanRequestDto requestDto) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
+        if (requestDto.getCompleted()) {
+            plan.complete();
+        } else {
+            plan.cancelComplete();
+        }
+        return GetPlanResponseDto.from(plan);
+    }
+
+    // 7. 플랜 연기 - 수행일(planDate)만 변경하고 연기 횟수 증가
+    @Transactional
+    public GetPlanResponseDto postponePlan(Long userId, Long planId, PostponePlanRequestDto requestDto) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
+        if (plan.getStatus() == PlanStatus.DONE) {
+            throw new GeneralException(ErrorStatus._ALREADY_COMPLETED_PLAN);
+        }
+
+        LocalDate toDate = requestDto.getToDate() != null
+                ? requestDto.getToDate()
+                : plan.getPlanDate().plusDays(1);
+        if (!toDate.isAfter(plan.getPlanDate()) || toDate.isBefore(LocalDate.now())) {
+            throw new GeneralException(ErrorStatus._INVALID_POSTPONE_DATE);
+        }
+
+        plan.postpone(toDate);
         return GetPlanResponseDto.from(plan);
     }
 

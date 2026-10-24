@@ -37,6 +37,13 @@ public class Plan {
     @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer postponeCount = 0;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'TODO'")
+    private PlanStatus status = PlanStatus.TODO;
+
+    private LocalDateTime completedTime;
+
 //    @NotNull
 //    user 객체 생성 시 수정
 //    @ManyToOne
@@ -56,5 +63,20 @@ public class Plan {
     public void updatePlan(String content, Long priority) {
         if (content != null) this.content = content;
         if (priority != null) this.priority = priority;
+    }
+
+    public void postpone(LocalDate toDate) {
+        this.planDate = toDate;
+        this.postponeCount++;
+    }
+
+    public void complete() {
+        this.status = PlanStatus.DONE;
+        this.completedTime = LocalDateTime.now();
+    }
+
+    public void cancelComplete() {
+        this.status = PlanStatus.TODO;
+        this.completedTime = null;
     }
 }

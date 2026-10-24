@@ -1,11 +1,14 @@
 package com.neroplan.backendPlan.domain.plan.controller;
 
+import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.service.PlanService;
 import com.neroplan.backendPlan.global.apiPayload.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +50,25 @@ public class PlanController {
             @PathVariable Long planId,
             @RequestBody UpdatePlanRequestDto requestDto) {
         return ApiResponse.onSuccess(planService.updatePlan(userId, planId, requestDto));
+    }
+
+    // 6. 플랜 완료 처리 / 완료 취소
+    @PatchMapping("/{planId}/complete")
+    public ApiResponse<GetPlanResponseDto> completePlan(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long planId,
+            @Valid @RequestBody CompletePlanRequestDto requestDto) {
+        return ApiResponse.onSuccess(planService.completePlan(userId, planId, requestDto));
+    }
+
+    // 7. 플랜 연기 - body 없이 호출하면 다음 날로 연기
+    @PatchMapping("/{planId}/postpone")
+    public ApiResponse<GetPlanResponseDto> postponePlan(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long planId,
+            @RequestBody(required = false) PostponePlanRequestDto requestDto) {
+        return ApiResponse.onSuccess(planService.postponePlan(userId, planId,
+                requestDto != null ? requestDto : new PostponePlanRequestDto(null)));
     }
 
     // 5. 플랜 삭제

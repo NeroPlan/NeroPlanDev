@@ -20,6 +20,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 400 Bad Request
     _BAD_REQUEST(HttpStatus.BAD_REQUEST, "400", "잘못된 요청입니다."),
+    _INVALID_POSTPONE_DATE(HttpStatus.BAD_REQUEST, "PLAN400", "연기 날짜는 기존 수행일보다 뒤이고, 오늘보다 앞일 수 없습니다."),
+    _ALREADY_COMPLETED_PLAN(HttpStatus.BAD_REQUEST, "PLAN400", "이미 완료된 계획은 연기할 수 없습니다."),
     _MAIL_ERROR(HttpStatus.BAD_REQUEST, "400", "인증 이메일 전송에 실패하였습니다."),
     _DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST, "400", "중복된 이메일입니다."),
     _DUPLICATED_LOGIN_ID(HttpStatus.BAD_REQUEST, "400", "중복된 로그인 ID입니다."),
@@ -47,6 +49,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // 404 Not Found
     _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 토큰을 찾을 수 없습니다."),
     _USER_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 유저를 찾을 수 없습니다."),
+    _PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAN404", "존재하지 않는 계획입니다."),
 
     // (Optional) 선택 추가 가능
     _METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "405", "허용되지 않은 메서드입니다."),

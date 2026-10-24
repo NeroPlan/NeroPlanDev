@@ -1,6 +1,7 @@
 package com.neroplan.backendPlan.domain.plan.dto;
 
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
+import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,8 @@ public class CreatePlanResponseDto {
     private Long categoryId;
     private LocalDate planDate;
     private Integer postponeCount;
+    private PlanStatus status;
+    private LocalDateTime completedTime;
 
 
     public static CreatePlanResponseDto from(Plan plan) {
@@ -34,6 +37,8 @@ public class CreatePlanResponseDto {
                 .categoryId(plan.getCategoryId())
                 .planDate(plan.getPlanDate())
                 .postponeCount(plan.getPostponeCount())
+                .status(plan.getStatus())
+                .completedTime(plan.getCompletedTime())
                 .build();
     }
 }
