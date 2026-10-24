@@ -3,9 +3,9 @@ spring:
     name: neroplan
 
   datasource:
-    url: jdbc:postgresql://postgres:5432/neroplan
-    username: postgres
-    password: 1234
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,3 +23,9 @@ server:
 logging:
     level:
       org.springframework.web: DEBUG
+
+jwt:
+  key: ${JWT_KEY}
+
+ai:
+  base-url: ${AI_BASE_URL:http://aiService:8000}
