@@ -1,5 +1,6 @@
 package com.neroplan.backendPlan.domain.plan.service;
 
+import com.neroplan.backendPlan.domain.plan.entity.AnalysisStatus;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
@@ -73,7 +74,7 @@ public class PlanScheduleService {
                 toTaskHistory(userPlans, today));
 
         // AI 호출 실패 시 기존 재배열 결과 유지
-        Optional<SchedulePlansResponseDto> response = aiClient.schedulePlans(requestDto);
+        Optional<SchedulePlansResponseDto> response = aiClient.analyzePlans(requestDto);
         if (response.isEmpty() || response.get().getPlans() == null) {
             return;
         }
@@ -95,7 +96,12 @@ public class PlanScheduleService {
             }
             // 모델 판정일 때만 risk_prob가 있으므로 그때만 성공률 계산
             Double successRate = scheduled.getRiskProb() != null ? 1 - scheduled.getRiskProb() : null;
-            detail.updateSchedule(order++, successRate, scheduled.getRiskFlag(), scheduled.getReason());
+            AnalysisStatus analysisStatus = AnalysisStatus.fromAiStatus(scheduled.getStatus());
+            if (analysisStatus == null) {
+                log.warn("aiService가 알 수 없는 판정 상태를 반환: {}", scheduled.getStatus());
+            }
+            detail.updateSchedule(order++, analysisStatus, scheduled.getRecordCount(),
+                    successRate, scheduled.getRiskFlag(), scheduled.getReason());
         }
     }
 
@@ -120,16 +126,16 @@ public class PlanScheduleService {
                 .toList();
     }
 
-    // 완료 > 연기된 적 있음(postponeCount) > 수행일이 지났는데 미완료 순으로 판정, 아직 진행 중이면 null
+    // 결과가 확정된 계획만 판정, 아직 진행 중이면 null
+    // 진행 중인 계획의 연기는 pending_plans의 postponed_count로만 전달 (이력과 중복 집계 방지)
+    // 계획한 날 끝내지 못했으면 나중에 완료했어도 미룸으로 판정
     private String toOutcome(Plan plan, LocalDate today) {
+        boolean postponed = plan.getPostponeCount() > 0;
         if (plan.getStatus() == PlanStatus.DONE) {
-            return OUTCOME_DONE;
-        }
-        if (plan.getPostponeCount() > 0) {
-            return OUTCOME_POSTPONED;
+            return postponed ? OUTCOME_POSTPONED : OUTCOME_DONE;
         }
         if (plan.getPlanDate().isBefore(today)) {
-            return OUTCOME_FAILED;
+            return postponed ? OUTCOME_POSTPONED : OUTCOME_FAILED;
         }
         return null;
     }
