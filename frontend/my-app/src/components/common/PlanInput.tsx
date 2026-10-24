@@ -1,13 +1,15 @@
 // components/common/PlanInput.tsx
 import { useEffect, useState } from "react";
-import { createPlan, deletePlan, getPlans, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import { completePlan, createPlan, deletePlan, getPlans, postponePlan, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
 import type { Plan } from "../../api/plan";
 
 export default function PlanInput() {
     const [plan, setPlan] = useState("");
+    const [minutes, setMinutes] = useState(""); // 예상 소요 시간(분) - AI 재배열에 필요해서 필수
     const [plans, setPlans] = useState<Plan[]>([]); // 서버에 저장된 계획 목록
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingContent, setEditingContent] = useState("");
+    const [editingMinutes, setEditingMinutes] = useState("");
 
     useEffect(() => {
         getPlans()
@@ -17,35 +19,72 @@ export default function PlanInput() {
             });
     }, []);
 
-    const handleAddPlan = async () => {
-        if (!plan.trim()) return; // 빈 값 제출 방지
+    // 1 이상의 정수만 허용, 아니면 null
+    const parseMinutes = (value: string) => {
+        const parsed = Number(value);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    };
 
-        const createdPlan = await createPlan(plan);
+    const handleAddPlan = async () => {
+        const estimatedMinutes = parseMinutes(minutes);
+        if (!plan.trim() || estimatedMinutes === null) return; // 빈 값 제출 방지
+
+        const createdPlan = await createPlan(plan, estimatedMinutes);
 
         setPlans((prev) => [...prev, createdPlan]); // 서버가 준 결과를 목록에 추가
         setPlan(""); // 입력창 초기화
+        setMinutes("");
     };
 
     const handleStartEdit = (p: Plan) => {
         setEditingId(p.planId);
         setEditingContent(p.content);
+        setEditingMinutes(p.estimatedMinutes?.toString() ?? "");
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
         setEditingContent("");
+        setEditingMinutes("");
     };
 
     const handleSaveEdit = async (planId: number) => {
-        if (!editingContent.trim()) return;
+        const estimatedMinutes = parseMinutes(editingMinutes);
+        if (!editingContent.trim() || estimatedMinutes === null) return;
 
-        const updated = await updatePlan(planId, { content: editingContent });
+        const updated = await updatePlan(planId, {
+            content: editingContent,
+            estimatedMinutes,
+        });
 
         setPlans((prev) =>
             prev.map((p) => (p.planId === planId ? updated : p))
         );
-        setEditingId(null);
-        setEditingContent("");
+        handleCancelEdit();
+    };
+
+    const handleToggleComplete = async (planId: number, completed: boolean) => {
+        try {
+            const updated = await completePlan(planId, completed);
+
+            setPlans((prev) =>
+                prev.map((p) => (p.planId === planId ? updated : p))
+            );
+        } catch (error) {
+            console.error("완료 상태를 바꾸지 못했습니다:", error);
+        }
+    };
+
+    // 다음 날로 연기 - 오늘 목록에서는 빠짐
+    const handlePostponePlan = async (planId: number) => {
+        try {
+            await postponePlan(planId);
+
+            setPlans((prev) => prev.filter((p) => p.planId !== planId));
+            if (editingId === planId) handleCancelEdit();
+        } catch (error) {
+            console.error("계획을 미루지 못했습니다:", error);
+        }
     };
 
     const handleDeletePlan = async (planId: number) => {
@@ -68,20 +107,40 @@ export default function PlanInput() {
             <hr className="mb-4" />
 
            <div className="space-y-3">
-                <input
-                    type="text"
-                    value={plan}
-                    onChange={(e) => setPlan(e.target.value)}
-                    placeholder="계획을 입력하세요"
-                    className="
-                        w-full
-                        border
-                        rounded-xl
-                        px-3
-                        py-2
-                        outline-none
-                    "
-                />
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        value={plan}
+                        onChange={(e) => setPlan(e.target.value)}
+                        placeholder="계획을 입력하세요"
+                        className="
+                            flex-1
+                            min-w-0
+                            border
+                            rounded-xl
+                            px-3
+                            py-2
+                            outline-none
+                        "
+                    />
+                    <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={minutes}
+                        onChange={(e) => setMinutes(e.target.value)}
+                        placeholder="소요 시간"
+                        className="
+                            w-24
+                            border
+                            rounded-xl
+                            px-3
+                            py-2
+                            outline-none
+                        "
+                    />
+                    <span className="text-gray-500">분</span>
+                </div>
                 <button
                     onClick={handleAddPlan}
                     className="
@@ -106,8 +165,17 @@ export default function PlanInput() {
                                         type="text"
                                         value={editingContent}
                                         onChange={(e) => setEditingContent(e.target.value)}
-                                        className="border rounded-lg px-2 py-1 text-base font-normal flex-1"
+                                        className="border rounded-lg px-2 py-1 text-base font-normal flex-1 min-w-0"
                                     />
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        step={1}
+                                        value={editingMinutes}
+                                        onChange={(e) => setEditingMinutes(e.target.value)}
+                                        className="border rounded-lg px-2 py-1 text-base font-normal w-20"
+                                    />
+                                    <span className="text-sm text-gray-500 font-normal">분</span>
                                     <button
                                         onClick={() => handleSaveEdit(p.planId)}
                                         className="text-sm text-blue-600"
@@ -123,7 +191,36 @@ export default function PlanInput() {
                                 </>
                             ) : (
                                 <>
-                                    <span className="flex-1">{p.content}</span>
+                                    <label className="flex items-center gap-1 text-sm font-normal text-gray-600">
+                                        <input
+                                            type="checkbox"
+                                            checked={p.status === "DONE"}
+                                            onChange={(e) => handleToggleComplete(p.planId, e.target.checked)}
+                                        />
+                                        완료
+                                    </label>
+                                    <span
+                                        className={`flex-1 ${p.status === "DONE" ? "line-through text-gray-400" : ""}`}
+                                    >
+                                        {p.content}
+                                    </span>
+                                    {p.estimatedMinutes != null && (
+                                        <span className="text-sm text-gray-500 font-normal">
+                                            {p.estimatedMinutes}분
+                                        </span>
+                                    )}
+                                    {/* 완료된 계획은 서버에서 연기를 막으므로 비활성화 */}
+                                    <label
+                                        className={`flex items-center gap-1 text-sm font-normal ${p.status === "DONE" ? "text-gray-300" : "text-gray-600"}`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={false}
+                                            disabled={p.status === "DONE"}
+                                            onChange={() => handlePostponePlan(p.planId)}
+                                        />
+                                        미룸
+                                    </label>
                                     <button
                                         onClick={() => handleStartEdit(p)}
                                         className="text-sm text-gray-500"
