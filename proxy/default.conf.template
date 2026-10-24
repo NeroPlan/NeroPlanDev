@@ -12,6 +12,13 @@ server {
     listen  [::]:80; #위의 포트랑 일치해야하고 docker run을 했을 때 서버 포트와 일치해야한다.
     server_name  localhost;
 
+    # 서비스가 재배포되면 내부 IP가 바뀌므로 요청마다 DNS를 다시 조회
+    # NGINX_LOCAL_RESOLVERS는 nginx 이미지가 /etc/resolv.conf에서 읽어 채움 (Dockerfile의 NGINX_ENTRYPOINT_LOCAL_RESOLVERS)
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+    set $backend_plan ${BACKEND_PLAN_URL};
+    set $backend_user ${BACKEND_USER_URL};
+    set $frontend ${FRONTEND_URL};
+
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -20,28 +27,28 @@ server {
 
      # API 요청은 Spring Boot로 전달
     location /api/v1/plans {
-        proxy_pass ${BACKEND_PLAN_URL};
+        proxy_pass $backend_plan;
     }
 
     location /api/v1/users {
-        proxy_pass ${BACKEND_USER_URL};
+        proxy_pass $backend_user;
     }
 
     # 구글 로그인 - 시작(/api/v1/auth, /oauth2)과 구글 콜백(/login/oauth2)을 모두 backendUser로 전달
     location /api/v1/auth {
-        proxy_pass ${BACKEND_USER_URL};
+        proxy_pass $backend_user;
     }
 
     location /oauth2/ {
-        proxy_pass ${BACKEND_USER_URL};
+        proxy_pass $backend_user;
     }
 
     location /login/oauth2/ {
-        proxy_pass ${BACKEND_USER_URL};
+        proxy_pass $backend_user;
     }
 
     location / { #웹주소에 따라 어떤 html파일을 사용자에게 보여줄 것인지 설정하는 부분
-        proxy_pass ${FRONTEND_URL};
+        proxy_pass $frontend;
     }
 
     #error_page  404              /404.html;
