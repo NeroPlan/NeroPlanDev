@@ -1,5 +1,6 @@
 package com.neroplan.backendPlan.domain.plan.dto;
 
+import com.neroplan.backendPlan.domain.plan.entity.AnalysisStatus;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
@@ -31,6 +32,8 @@ public class GetPlanResponseDto {
 
     // AI 재배열 결과 - 아직 분석 전이면 null
     private Integer recommendedOrder;
+    private AnalysisStatus analysisStatus;
+    private Integer recordCount;
     private Double successRate;
     private Boolean isBiased;
     private String biasedReason;
@@ -55,6 +58,8 @@ public class GetPlanResponseDto {
                 .status(plan.getStatus())
                 .completedTime(plan.getCompletedTime())
                 .recommendedOrder(detail != null ? detail.getRecommendedOrder() : null)
+                .analysisStatus(detail != null ? detail.getAnalysisStatus() : null)
+                .recordCount(detail != null ? detail.getRecordCount() : null)
                 .successRate(detail != null ? detail.getSuccessRate() : null)
                 .isBiased(detail != null ? detail.getIsBiased() : null)
                 .biasedReason(detail != null ? detail.getBiasedReason() : null)

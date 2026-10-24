@@ -1,5 +1,6 @@
 package com.neroplan.backendPlan.domain.plan.service;
 
+import com.neroplan.backendPlan.domain.plan.entity.AnalysisStatus;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
@@ -95,7 +96,12 @@ public class PlanScheduleService {
             }
             // 모델 판정일 때만 risk_prob가 있으므로 그때만 성공률 계산
             Double successRate = scheduled.getRiskProb() != null ? 1 - scheduled.getRiskProb() : null;
-            detail.updateSchedule(order++, successRate, scheduled.getRiskFlag(), scheduled.getReason());
+            AnalysisStatus analysisStatus = AnalysisStatus.fromAiStatus(scheduled.getStatus());
+            if (analysisStatus == null) {
+                log.warn("aiService가 알 수 없는 판정 상태를 반환: {}", scheduled.getStatus());
+            }
+            detail.updateSchedule(order++, analysisStatus, scheduled.getRecordCount(),
+                    successRate, scheduled.getRiskFlag(), scheduled.getReason());
         }
     }
 
