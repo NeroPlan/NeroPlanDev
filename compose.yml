@@ -8,10 +8,14 @@ services:
     container_name: proxy
     ports:
       - "8080:80"
-    volumes:
-      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
+    environment:
+      BACKEND_PLAN_URL: http://backendPlan:8080
+      BACKEND_USER_URL: http://backendUser:8080
+      FRONTEND_URL: http://frontend:80
     depends_on:
       - frontend
+      - backendUser
+      - backendPlan
     restart: always
 
   frontend:

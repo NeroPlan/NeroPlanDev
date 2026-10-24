@@ -1,8 +1,9 @@
 import axios from "axios";
 import { getAccessToken, removeAccessToken } from "./auth";
 
+// 프론트와 API가 같은 도메인(proxy) 뒤에 있으므로 상대 경로 사용
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "",
 });
 
 api.interceptors.request.use((config) => {

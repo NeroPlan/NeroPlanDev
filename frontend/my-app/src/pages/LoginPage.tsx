@@ -8,17 +8,17 @@ import { SiNaver, SiKakaotalk } from "react-icons/si";
 export default function LoginPage() {
     const handleGoogleLogin = () => {
         window.location.href =
-            "http://localhost:4000/api/v1/auth/login/google";
+            "/api/v1/auth/login/google";
     };
 
     const handleCacaoLogin = () => {
         window.location.href =
-            "http://localhost:4000/api/v1/auth/login/cacao";
+            "/api/v1/auth/login/cacao";
     };
 
     const handleNaverLogin = () => {
         window.location.href =
-            "http://localhost:4000/api/v1/auth/login/naver";
+            "/api/v1/auth/login/naver";
     };
 
     return (
