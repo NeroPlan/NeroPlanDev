@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.util.List;
 
+// aiService POST /api/ai/plans/classify 요청
 @Getter
 @AllArgsConstructor
 public class ClassifyCategoryRequestDto {

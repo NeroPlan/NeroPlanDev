@@ -6,7 +6,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-// aiService success_rate_scheduler.schedule_plans()의 입력 형식
+// aiService POST /api/ai/analyze 요청 - success_rate_scheduler.schedule_plans()의 입력 형식
 @Getter
 @AllArgsConstructor
 public class SchedulePlansRequestDto {

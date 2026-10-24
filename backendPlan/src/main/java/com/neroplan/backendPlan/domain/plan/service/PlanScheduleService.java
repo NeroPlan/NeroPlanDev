@@ -73,7 +73,7 @@ public class PlanScheduleService {
                 toTaskHistory(userPlans, today));
 
         // AI 호출 실패 시 기존 재배열 결과 유지
-        Optional<SchedulePlansResponseDto> response = aiClient.schedulePlans(requestDto);
+        Optional<SchedulePlansResponseDto> response = aiClient.analyzePlans(requestDto);
         if (response.isEmpty() || response.get().getPlans() == null) {
             return;
         }

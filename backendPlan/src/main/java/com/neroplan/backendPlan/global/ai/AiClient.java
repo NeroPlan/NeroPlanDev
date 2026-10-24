@@ -19,13 +19,16 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AiClient {
 
+    private static final String CLASSIFY_URI = "/api/ai/plans/classify";
+    private static final String ANALYZE_URI = "/api/ai/analyze";
+
     private final RestClient aiRestClient;
 
     // 1. 계획 내용으로 카테고리 분류 - 기존 카테고리에 없으면 aiService가 새 이름을 만들어 반환
     public Optional<String> classifyCategory(String content, List<String> categories) {
         try {
             ClassifyCategoryResponseDto response = aiRestClient.post()
-                    .uri("/classify")
+                    .uri(CLASSIFY_URI)
                     .body(new ClassifyCategoryRequestDto(content, categories))
                     .retrieve()
                     .body(ClassifyCategoryResponseDto.class);
@@ -36,16 +39,16 @@ public class AiClient {
         }
     }
 
-    // 2. 위험도 기반 계획 재배열 - 응답의 plans 순서가 추천 수행 순서
-    public Optional<SchedulePlansResponseDto> schedulePlans(SchedulePlansRequestDto requestDto) {
+    // 2. 위험도 분석 및 계획 재배열 - 응답의 plans 순서가 추천 수행 순서
+    public Optional<SchedulePlansResponseDto> analyzePlans(SchedulePlansRequestDto requestDto) {
         try {
             return Optional.ofNullable(aiRestClient.post()
-                    .uri("/schedule")
+                    .uri(ANALYZE_URI)
                     .body(requestDto)
                     .retrieve()
                     .body(SchedulePlansResponseDto.class));
         } catch (RestClientException e) {
-            log.warn("aiService 계획 재배열 실패: {}", e.getMessage());
+            log.warn("aiService 계획 분석 실패: {}", e.getMessage());
             return Optional.empty();
         }
     }
