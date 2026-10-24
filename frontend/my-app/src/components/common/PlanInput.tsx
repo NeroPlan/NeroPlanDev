@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { completePlan, createPlan, deletePlan, getPlans, postponePlan, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
 import type { Plan } from "../../api/plan";
+import { getErrorMessage } from "../../api/api";
 
 export default function PlanInput() {
     const [plan, setPlan] = useState("");
@@ -10,12 +11,14 @@ export default function PlanInput() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingContent, setEditingContent] = useState("");
     const [editingMinutes, setEditingMinutes] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         getPlans()
             .then(setPlans)
             .catch((error) => {
                 console.error("계획 목록을 불러오지 못했습니다:", error);
+                setErrorMessage(getErrorMessage(error, "계획 목록을 불러오지 못했습니다."));
             });
     }, []);
 
@@ -27,13 +30,26 @@ export default function PlanInput() {
 
     const handleAddPlan = async () => {
         const estimatedMinutes = parseMinutes(minutes);
-        if (!plan.trim() || estimatedMinutes === null) return; // 빈 값 제출 방지
+        if (!plan.trim()) {
+            setErrorMessage("계획을 입력하세요.");
+            return;
+        }
+        if (estimatedMinutes === null) {
+            setErrorMessage("소요 시간을 1분 이상의 숫자로 입력하세요.");
+            return;
+        }
 
-        const createdPlan = await createPlan(plan, estimatedMinutes);
+        try {
+            const createdPlan = await createPlan(plan, estimatedMinutes);
 
-        setPlans((prev) => [...prev, createdPlan]); // 서버가 준 결과를 목록에 추가
-        setPlan(""); // 입력창 초기화
-        setMinutes("");
+            setPlans((prev) => [...prev, createdPlan]); // 서버가 준 결과를 목록에 추가
+            setPlan(""); // 입력창 초기화
+            setMinutes("");
+            setErrorMessage("");
+        } catch (error) {
+            console.error("계획을 추가하지 못했습니다:", error);
+            setErrorMessage(getErrorMessage(error, "계획을 추가하지 못했습니다."));
+        }
     };
 
     const handleStartEdit = (p: Plan) => {
@@ -50,17 +66,30 @@ export default function PlanInput() {
 
     const handleSaveEdit = async (planId: number) => {
         const estimatedMinutes = parseMinutes(editingMinutes);
-        if (!editingContent.trim() || estimatedMinutes === null) return;
+        if (!editingContent.trim()) {
+            setErrorMessage("계획을 입력하세요.");
+            return;
+        }
+        if (estimatedMinutes === null) {
+            setErrorMessage("소요 시간을 1분 이상의 숫자로 입력하세요.");
+            return;
+        }
 
-        const updated = await updatePlan(planId, {
-            content: editingContent,
-            estimatedMinutes,
-        });
+        try {
+            const updated = await updatePlan(planId, {
+                content: editingContent,
+                estimatedMinutes,
+            });
 
-        setPlans((prev) =>
-            prev.map((p) => (p.planId === planId ? updated : p))
-        );
-        handleCancelEdit();
+            setPlans((prev) =>
+                prev.map((p) => (p.planId === planId ? updated : p))
+            );
+            handleCancelEdit();
+            setErrorMessage("");
+        } catch (error) {
+            console.error("계획을 수정하지 못했습니다:", error);
+            setErrorMessage(getErrorMessage(error, "계획을 수정하지 못했습니다."));
+        }
     };
 
     const handleToggleComplete = async (planId: number, completed: boolean) => {
@@ -70,8 +99,10 @@ export default function PlanInput() {
             setPlans((prev) =>
                 prev.map((p) => (p.planId === planId ? updated : p))
             );
+            setErrorMessage("");
         } catch (error) {
             console.error("완료 상태를 바꾸지 못했습니다:", error);
+            setErrorMessage(getErrorMessage(error, "완료 상태를 바꾸지 못했습니다."));
         }
     };
 
@@ -82,8 +113,10 @@ export default function PlanInput() {
 
             setPlans((prev) => prev.filter((p) => p.planId !== planId));
             if (editingId === planId) handleCancelEdit();
+            setErrorMessage("");
         } catch (error) {
             console.error("계획을 미루지 못했습니다:", error);
+            setErrorMessage(getErrorMessage(error, "계획을 미루지 못했습니다."));
         }
     };
 
@@ -93,8 +126,10 @@ export default function PlanInput() {
 
             setPlans((prev) => prev.filter((p) => p.planId !== planId));
             if (editingId === planId) handleCancelEdit();
+            setErrorMessage("");
         } catch (error) {
             console.error("계획을 삭제하지 못했습니다:", error);
+            setErrorMessage(getErrorMessage(error, "계획을 삭제하지 못했습니다."));
         }
     };
 
@@ -155,6 +190,10 @@ export default function PlanInput() {
                 >
                     +
                 </button>
+
+                {errorMessage && (
+                    <p className="text-sm text-red-500">{errorMessage}</p>
+                )}
 
                 <ul className="list-disc pl-6 space-y-1 text-lg font-semibold">
                     {plans.map((p) => (
