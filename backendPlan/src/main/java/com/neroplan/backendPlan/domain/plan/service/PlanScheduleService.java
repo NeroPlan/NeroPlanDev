@@ -120,16 +120,16 @@ public class PlanScheduleService {
                 .toList();
     }
 
-    // 완료 > 연기된 적 있음(postponeCount) > 수행일이 지났는데 미완료 순으로 판정, 아직 진행 중이면 null
+    // 결과가 확정된 계획만 판정, 아직 진행 중이면 null
+    // 진행 중인 계획의 연기는 pending_plans의 postponed_count로만 전달 (이력과 중복 집계 방지)
+    // 계획한 날 끝내지 못했으면 나중에 완료했어도 미룸으로 판정
     private String toOutcome(Plan plan, LocalDate today) {
+        boolean postponed = plan.getPostponeCount() > 0;
         if (plan.getStatus() == PlanStatus.DONE) {
-            return OUTCOME_DONE;
-        }
-        if (plan.getPostponeCount() > 0) {
-            return OUTCOME_POSTPONED;
+            return postponed ? OUTCOME_POSTPONED : OUTCOME_DONE;
         }
         if (plan.getPlanDate().isBefore(today)) {
-            return OUTCOME_FAILED;
+            return postponed ? OUTCOME_POSTPONED : OUTCOME_FAILED;
         }
         return null;
     }
