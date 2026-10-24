@@ -2,6 +2,9 @@ import api from "./api";
 
 export type PlanStatus = "TODO" | "DONE";
 
+// AI 위험 판정 상태 - 기록 없음 / 기록 10건 미만(규칙 판정) / 기록 10건 이상(모델 판정)
+export type AnalysisStatus = "NO_RECORD" | "COLLECTING" | "PREDICTED";
+
 export interface Plan {
     planId: number;
     content: string;
@@ -18,6 +21,8 @@ export interface Plan {
 
     // AI 재배열 결과 - 조회 응답에만 포함되고 생성 응답에는 없음, 분석 전이면 null
     recommendedOrder?: number | null;
+    analysisStatus?: AnalysisStatus | null;
+    recordCount?: number | null; // 같은 카테고리의 확정된 과거 기록 수
     successRate?: number | null;
     isBiased?: boolean | null;
     biasedReason?: string | null;

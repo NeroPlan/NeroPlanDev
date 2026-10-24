@@ -1,6 +1,9 @@
 // components/PlanPage/AnalysisResult.tsx
 import type { Plan } from "../../api/plan";
 
+// aiService가 모델로 판정하기 시작하는 카테고리 기록 수
+const MIN_RECORDS_FOR_PREDICTION = 10;
+
 interface AnalysisResultProps {
     plans: Plan[]; // AI 추천 순서로 정렬된 미완료 계획
 }
@@ -36,9 +39,19 @@ export default function AnalysisResult({
                                         </span>
                                     )}
                                 </div>
-                                {p.successRate != null && (
+                                {p.analysisStatus === "PREDICTED" && p.successRate != null && (
                                     <p className="text-sm text-gray-600">
                                         예상 성공률 {Math.round(p.successRate * 100)}%
+                                    </p>
+                                )}
+                                {p.analysisStatus === "COLLECTING" && (
+                                    <p className="text-sm text-gray-400">
+                                        기록 수집 중 ({p.recordCount ?? 0}/{MIN_RECORDS_FOR_PREDICTION})
+                                    </p>
+                                )}
+                                {p.analysisStatus === "NO_RECORD" && (
+                                    <p className="text-sm text-gray-400">
+                                        이 카테고리의 첫 계획이에요
                                     </p>
                                 )}
                                 {p.isBiased && (
