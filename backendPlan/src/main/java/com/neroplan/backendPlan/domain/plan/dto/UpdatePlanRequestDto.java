@@ -9,5 +9,6 @@ public class UpdatePlanRequestDto {
 
     private String content;
     private Long priority;
+    private Integer estimatedMinutes;
 
 }

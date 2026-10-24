@@ -1,6 +1,7 @@
 package com.neroplan.backendPlan.domain.plan.entity;
 
 
+import com.neroplan.backendPlan.domain.category.entity.Category;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -24,6 +25,9 @@ public class Plan {
 
     @NotNull
     private Long priority;
+
+    // 예상 소요 시간(분) - AI 위험도 판정에 사용
+    private Integer estimatedMinutes;
 
     @Builder.Default
     private LocalDateTime createdTime = LocalDateTime.now();
@@ -52,17 +56,19 @@ public class Plan {
     @Column(nullable = true)
     private Long userId;
 
-//    @NotNull
-//    category 객체 생성 시 수정
-//    @ManyToOne
-//    @JoinColumn(name = "category_id")
-//    private Category category;
-    @Column(nullable = true)
-    private Long categoryId;
+    // AI 분류 전에는 null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
-    public void updatePlan(String content, Long priority) {
+    public void updatePlan(String content, Long priority, Integer estimatedMinutes) {
         if (content != null) this.content = content;
         if (priority != null) this.priority = priority;
+        if (estimatedMinutes != null) this.estimatedMinutes = estimatedMinutes;
+    }
+
+    public void assignCategory(Category category) {
+        this.category = category;
     }
 
     public void postpone(LocalDate toDate) {

@@ -21,6 +21,8 @@ public class GetPlanResponseDto {
     private Long priority;
     private Long userId;
     private Long categoryId;
+    private String categoryName;
+    private Integer estimatedMinutes;
     private LocalDate planDate;
     private Integer postponeCount;
     private PlanStatus status;
@@ -34,7 +36,9 @@ public class GetPlanResponseDto {
                 .createdTime(plan.getCreatedTime())
                 .priority(plan.getPriority())
                 .userId(plan.getUserId())
-                .categoryId(plan.getCategoryId())
+                .categoryId(plan.getCategory() != null ? plan.getCategory().getCategoryId() : null)
+                .categoryName(plan.getCategory() != null ? plan.getCategory().getName() : null)
+                .estimatedMinutes(plan.getEstimatedMinutes())
                 .planDate(plan.getPlanDate())
                 .postponeCount(plan.getPostponeCount())
                 .status(plan.getStatus())

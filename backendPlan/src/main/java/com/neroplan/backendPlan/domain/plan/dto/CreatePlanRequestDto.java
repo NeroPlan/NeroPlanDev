@@ -2,6 +2,7 @@ package com.neroplan.backendPlan.domain.plan.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +21,10 @@ public class CreatePlanRequestDto {
 
     @NotNull(message = "우선순위는 필수입니다.")
     private Long priority;
+
+    // 예상 소요 시간(분)
+    @Positive(message = "예상 소요 시간은 1분 이상이어야 합니다.")
+    private Integer estimatedMinutes;
 
     // userId의 경우 서버가 토큰에서 추출
     @NotNull(message = "userId는 필수입니다.")
