@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,6 +20,8 @@ public class GetPlanResponseDto {
     private Long priority;
     private Long userId;
     private Long categoryId;
+    private LocalDate planDate;
+    private Integer postponeCount;
 
 
     public static GetPlanResponseDto from(Plan plan) {
@@ -29,6 +32,8 @@ public class GetPlanResponseDto {
                 .priority(plan.getPriority())
                 .userId(plan.getUserId())
                 .categoryId(plan.getCategoryId())
+                .planDate(plan.getPlanDate())
+                .postponeCount(plan.getPostponeCount())
                 .build();
     }
 }

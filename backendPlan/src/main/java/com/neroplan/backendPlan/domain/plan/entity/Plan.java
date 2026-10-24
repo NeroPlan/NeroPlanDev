@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,15 @@ public class Plan {
 
     @Builder.Default
     private LocalDateTime createdTime = LocalDateTime.now();
+
+    // 계획 수행 예정일 - 연기 시 이 값만 변경되며 createdTime은 유지
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "date default current_date")
+    private LocalDate planDate = LocalDate.now();
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer postponeCount = 0;
 
 //    @NotNull
 //    user 객체 생성 시 수정
