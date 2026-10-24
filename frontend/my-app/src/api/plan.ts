@@ -28,3 +28,15 @@ export const getPlans = async (): Promise<Plan[]> => {
 
     return response.data.result;
 };
+
+export const updatePlan = async (
+    planId: number,
+    data: { content?: string; priority?: number }
+): Promise<Plan> => {
+    const response = await api.patch(`/api/v1/plans/${planId}`, data);
+    return response.data.result;
+};
+
+export const deletePlan = async (planId: number): Promise<void> => {
+    await api.delete(`/api/v1/plans/${planId}`);
+};
