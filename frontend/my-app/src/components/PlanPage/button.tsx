@@ -1,8 +1,18 @@
 // components/PlanPage/AnalyzeButton.tsx
 
-export default function AnalyzeButton() {
+interface AnalyzeButtonProps {
+    onClick: () => void;
+    loading: boolean;
+}
+
+export default function AnalyzeButton({
+    onClick,
+    loading,
+}: AnalyzeButtonProps) {
     return (
         <button
+            onClick={onClick}
+            disabled={loading}
             className="
                 w-full
                 bg-blue-600
@@ -13,9 +23,10 @@ export default function AnalyzeButton() {
                 shadow-sm
                 hover:bg-blue-700
                 transition
+                disabled:opacity-50
             "
         >
-            분석하기
+            {loading ? "분석 결과 불러오는 중..." : "분석하기"}
         </button>
     );
 }
