@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
 
 @Getter
 @Builder
@@ -25,10 +23,6 @@ public class CreatePlanRequestDto {
     // 예상 소요 시간(분)
     @Positive(message = "예상 소요 시간은 1분 이상이어야 합니다.")
     private Integer estimatedMinutes;
-
-    // userId의 경우 서버가 토큰에서 추출
-    @NotNull(message = "userId는 필수입니다.")
-     private Long userId;
 
     // categoryId의 경우 서버가 AI를 통해 결정
     // private Long categoryId;

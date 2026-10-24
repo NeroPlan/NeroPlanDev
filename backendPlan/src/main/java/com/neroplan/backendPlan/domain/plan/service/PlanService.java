@@ -32,9 +32,7 @@ public class PlanService {
     @Transactional
     public CreatePlanResponseDto createPlan(Long userId, CreatePlanRequestDto requestDto) {
         if (userId == null) {
-            throw new IllegalArgumentException(
-                    "JWT에서 userId를 가져오지 못했습니다."
-            );
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
         Plan plan = Plan.builder()
                 .userId(userId)
@@ -50,9 +48,9 @@ public class PlanService {
 
     // 2. 플랜 id 별 단건 조회
     @Transactional(readOnly = true)
-    public GetPlanResponseDto getPlan(Long planId) {
-        Plan plan = planRepository.findById(planId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
+    public GetPlanResponseDto getPlan(Long userId, Long planId) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
         return GetPlanResponseDto.from(plan);
     }
 
@@ -75,7 +73,7 @@ public class PlanService {
     @Transactional
     public GetPlanResponseDto updatePlan(Long userId, Long planId, UpdatePlanRequestDto requestDto) {
         Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
         plan.updatePlan(requestDto.getContent(), requestDto.getPriority(), requestDto.getEstimatedMinutes());
         return GetPlanResponseDto.from(plan);
     }
@@ -115,9 +113,9 @@ public class PlanService {
 
     // 5. 플랜 삭제
     @Transactional
-    public void deletePlan(Long planId) {
-        Plan plan = planRepository.findById(planId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계획입니다. 플랜아이디 : " + planId));
+    public void deletePlan(Long userId, Long planId) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
         planRepository.delete(plan);
     }
 }

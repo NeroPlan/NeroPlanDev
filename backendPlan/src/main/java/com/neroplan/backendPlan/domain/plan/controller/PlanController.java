@@ -25,14 +25,14 @@ public class PlanController {
 
     // 1. 플랜 생성
     @PostMapping
-    public ApiResponse<CreatePlanResponseDto> createPlan(@AuthenticationPrincipal Long userId, @RequestBody CreatePlanRequestDto requestDto) {
+    public ApiResponse<CreatePlanResponseDto> createPlan(@AuthenticationPrincipal Long userId, @Valid @RequestBody CreatePlanRequestDto requestDto) {
         return ApiResponse.onSuccess(planService.createPlan(userId, requestDto));
     }
 
     // 2. 플랜별 단건 조회 - api 명세에 없으나 단건 조회가 필요한 경우 사용
     @GetMapping("/{planId}")
-    public ApiResponse<GetPlanResponseDto> getPlan(@PathVariable Long planId) {
-        return ApiResponse.onSuccess(planService.getPlan(planId));
+    public ApiResponse<GetPlanResponseDto> getPlan(@AuthenticationPrincipal Long userId, @PathVariable Long planId) {
+        return ApiResponse.onSuccess(planService.getPlan(userId, planId));
     }
 
     // 3. 유저별 전체 조회 - date 파라미터를 붙일지 고민하고 수정 필요
@@ -48,7 +48,7 @@ public class PlanController {
     public ApiResponse<GetPlanResponseDto> updatePlan(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long planId,
-            @RequestBody UpdatePlanRequestDto requestDto) {
+            @Valid @RequestBody UpdatePlanRequestDto requestDto) {
         return ApiResponse.onSuccess(planService.updatePlan(userId, planId, requestDto));
     }
 
@@ -73,8 +73,8 @@ public class PlanController {
 
     // 5. 플랜 삭제
     @DeleteMapping("/{planId}")
-    public ApiResponse<String> deletePlan(@PathVariable Long planId) {
-        planService.deletePlan(planId);
+    public ApiResponse<String> deletePlan(@AuthenticationPrincipal Long userId, @PathVariable Long planId) {
+        planService.deletePlan(userId, planId);
         return ApiResponse.onSuccess("성공적으로 삭제되었습니다.");
     }
 }
