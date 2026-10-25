@@ -6,7 +6,10 @@ torch
 accelerate
 langgraph>=1.0,<2.0
 google-generativeai
-scikit-learn
+scikit-learn==1.9.0
 pandas
 numpy
 scipy
+joblib
+fastapi
+uvicorn
