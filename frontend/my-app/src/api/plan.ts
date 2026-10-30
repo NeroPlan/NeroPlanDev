@@ -23,7 +23,9 @@ export interface Plan {
     recommendedOrder?: number | null;
     analysisStatus?: AnalysisStatus | null;
     recordCount?: number | null; // 같은 카테고리의 확정된 과거 기록 수
-    successRate?: number | null;
+    successRate?: number | null; // 모델 판정일 때만 - 예측 성공률(0~1)
+    completionRate?: number | null; // 기록 수집 중일 때만 - 지금까지 실제 완료율(0~1)
+    priorityReason?: string | null; // AI 판단 근거 문장
     isBiased?: boolean | null;
     biasedReason?: string | null;
 }
@@ -52,6 +54,12 @@ export const createPlan = async (
 export const getPlans = async (): Promise<Plan[]> => {
     const response = await api.get("/api/v1/plans");
 
+    return response.data.result;
+};
+
+// 오늘 계획을 AI로 다시 분석 - 추천 수행 순서대로 정렬된 오늘 계획 전체(완료 포함) 반환
+export const analyzePlans = async (): Promise<Plan[]> => {
+    const response = await api.post("/api/v1/plans/analyze");
     return response.data.result;
 };
 
