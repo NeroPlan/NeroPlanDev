@@ -1,0 +1,10 @@
+# planner_api.py(백엔드 연동 API) 실행에 필요한 패키지만 - RAG용 torch/transformers 등은 requirements.txt
+fastapi
+uvicorn
+google-generativeai
+# final_bias_model.joblib을 학습한 버전과 맞춰야 로드 가능
+scikit-learn==1.9.0
+pandas
+numpy
+scipy
+joblib
