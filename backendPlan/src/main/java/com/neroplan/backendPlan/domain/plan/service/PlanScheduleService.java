@@ -26,8 +26,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// 계획 내용이 바뀔 때만 aiService로 재배열을 다시 계산해 PlanDetail에 저장
-// 변경 트랜잭션 커밋 후 별도 스레드에서 실행되므로 API 응답이 AI 호출을 기다리지 않음
+// aiService로 재배열을 계산해 PlanDetail에 저장
+// 계획이 바뀌면 변경 트랜잭션 커밋 후 별도 스레드에서 미리 계산하고, 분석하기 요청 시에는 동기로 다시 계산
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -48,7 +48,8 @@ public class PlanScheduleService {
         recalculate(event.userId(), event.planDate());
     }
 
-    private void recalculate(Long userId, LocalDate planDate) {
+    // 재배열 결과를 저장했거나 재배열할 계획이 없으면 true, aiService 호출에 실패하면 false
+    public boolean recalculate(Long userId, LocalDate planDate) {
         LocalDate today = LocalDate.now();
         List<Plan> userPlans = planRepository.findByUserId(userId);
 
@@ -66,7 +67,7 @@ public class PlanScheduleService {
 
         if (pendingPlans.isEmpty()) {
             detailsByPlanId.values().forEach(PlanDetail::clearRecommendedOrder);
-            return;
+            return true;
         }
 
         SchedulePlansRequestDto requestDto = new SchedulePlansRequestDto(
@@ -76,7 +77,7 @@ public class PlanScheduleService {
         // AI 호출 실패 시 기존 재배열 결과 유지
         Optional<SchedulePlansResponseDto> response = aiClient.analyzePlans(requestDto);
         if (response.isEmpty() || response.get().getPlans() == null) {
-            return;
+            return false;
         }
 
         detailsByPlanId.values().forEach(PlanDetail::clearRecommendedOrder);
@@ -100,9 +101,13 @@ public class PlanScheduleService {
             if (analysisStatus == null) {
                 log.warn("aiService가 알 수 없는 판정 상태를 반환: {}", scheduled.getStatus());
             }
+            // 판단 근거는 항상 저장하고, 위험 판정일 때만 경고 문구로도 사용
+            String biasedReason = Boolean.TRUE.equals(scheduled.getRiskFlag()) ? scheduled.getReason() : null;
             detail.updateSchedule(order++, analysisStatus, scheduled.getRecordCount(),
-                    successRate, scheduled.getRiskFlag(), scheduled.getReason());
+                    successRate, scheduled.getCompletionRate(), scheduled.getReason(),
+                    scheduled.getRiskFlag(), biasedReason);
         }
+        return true;
     }
 
     private SchedulePlansRequestDto.PendingPlan toPendingPlan(Plan plan) {

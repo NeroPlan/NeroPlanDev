@@ -17,6 +17,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "파일 업로드에 실패하였습니다."),
     _FILE_DOWNLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "파일 다운로드에 실패하였습니다."),
     _FILE_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "파일 삭제에 실패하였습니다."),
+    _AI_ANALYSIS_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "PLAN503", "AI 분석 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."),
 
     // 400 Bad Request
     _BAD_REQUEST(HttpStatus.BAD_REQUEST, "400", "잘못된 요청입니다."),

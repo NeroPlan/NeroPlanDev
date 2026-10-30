@@ -34,7 +34,9 @@ public class GetPlanResponseDto {
     private Integer recommendedOrder;
     private AnalysisStatus analysisStatus;
     private Integer recordCount;
-    private Double successRate;
+    private Double successRate;      // 모델 판정일 때만 - 예측 성공률
+    private Double completionRate;   // 기록 수집 중일 때만 - 지금까지 실제 완료율
+    private String priorityReason;   // 판단 근거 문장
     private Boolean isBiased;
     private String biasedReason;
 
@@ -61,6 +63,8 @@ public class GetPlanResponseDto {
                 .analysisStatus(detail != null ? detail.getAnalysisStatus() : null)
                 .recordCount(detail != null ? detail.getRecordCount() : null)
                 .successRate(detail != null ? detail.getSuccessRate() : null)
+                .completionRate(detail != null ? detail.getCompletionRate() : null)
+                .priorityReason(detail != null ? detail.getPriorityReason() : null)
                 .isBiased(detail != null ? detail.getIsBiased() : null)
                 .biasedReason(detail != null ? detail.getBiasedReason() : null)
                 .build();

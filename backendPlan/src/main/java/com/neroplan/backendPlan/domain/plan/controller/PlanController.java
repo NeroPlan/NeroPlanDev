@@ -43,6 +43,12 @@ public class PlanController {
 //        return ApiResponse.onSuccess(planService.getPlansByUserId(userId));
     }
 
+    // 8. 오늘 계획 분석 - aiService로 위험도 판정과 재배열을 다시 계산해 추천 수행 순서대로 반환
+    @PostMapping("/analyze")
+    public ApiResponse<List<GetPlanResponseDto>> analyzeTodayPlans(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(planService.analyzeTodayPlans(userId));
+    }
+
     // 4. 플랜 수정
     @PatchMapping("/{planId}")
     public ApiResponse<GetPlanResponseDto> updatePlan(
