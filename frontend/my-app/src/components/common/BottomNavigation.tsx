@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 
 const menus = [
   { label: "계획", path: "/plan", icon: "✓" },
+  { label: "분석", path: "/analysis", icon: "▤" },
   { label: "마이", path: "/mypage", icon: "◉" },
 ];
 

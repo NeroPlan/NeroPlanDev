@@ -10,6 +10,7 @@ import MyPage from "../pages/MyPage";
 import MainLayout from "../layouts/MainLayout";
 import LoginPage from "../pages/LoginPage";
 import PlanPage from "../pages/PlanPage";
+import AnalysisPage from "../pages/AnalysisPage";
 import OnboardingPage from "../pages/OnboardingPage";
 
 const router = createBrowserRouter([
@@ -29,6 +30,16 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <PlanPage />,
+            },
+        ],
+    },
+    {
+        path: "/analysis",
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <AnalysisPage />,
             },
         ],
     },
