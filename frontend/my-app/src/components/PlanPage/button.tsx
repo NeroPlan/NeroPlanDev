@@ -26,7 +26,7 @@ export default function AnalyzeButton({
                 disabled:opacity-50
             "
         >
-            {loading ? "분석 결과 불러오는 중..." : "분석하기"}
+            {loading ? "분석 중..." : "분석하기"}
         </button>
     );
 }

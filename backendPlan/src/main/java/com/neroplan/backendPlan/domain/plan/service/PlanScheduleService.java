@@ -3,6 +3,7 @@ package com.neroplan.backendPlan.domain.plan.service;
 import com.neroplan.backendPlan.domain.plan.entity.AnalysisStatus;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
+import com.neroplan.backendPlan.domain.plan.entity.PlanOutcome;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
 import com.neroplan.backendPlan.domain.plan.event.PlanChangedEvent;
 import com.neroplan.backendPlan.domain.plan.repository.PlanDetailRepository;
@@ -26,16 +27,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// 계획 내용이 바뀔 때만 aiService로 재배열을 다시 계산해 PlanDetail에 저장
-// 변경 트랜잭션 커밋 후 별도 스레드에서 실행되므로 API 응답이 AI 호출을 기다리지 않음
+// aiService로 재배열을 계산해 PlanDetail에 저장
+// 계획이 바뀌면 변경 트랜잭션 커밋 후 별도 스레드에서 미리 계산하고, 분석하기 요청 시에는 동기로 다시 계산
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlanScheduleService {
-
-    private static final String OUTCOME_DONE = "완료";
-    private static final String OUTCOME_POSTPONED = "미룸";
-    private static final String OUTCOME_FAILED = "실패";
 
     private final PlanRepository planRepository;
     private final PlanDetailRepository planDetailRepository;
@@ -48,7 +45,8 @@ public class PlanScheduleService {
         recalculate(event.userId(), event.planDate());
     }
 
-    private void recalculate(Long userId, LocalDate planDate) {
+    // 재배열 결과를 저장했거나 재배열할 계획이 없으면 true, aiService 호출에 실패하면 false
+    public boolean recalculate(Long userId, LocalDate planDate) {
         LocalDate today = LocalDate.now();
         List<Plan> userPlans = planRepository.findByUserId(userId);
 
@@ -66,7 +64,7 @@ public class PlanScheduleService {
 
         if (pendingPlans.isEmpty()) {
             detailsByPlanId.values().forEach(PlanDetail::clearRecommendedOrder);
-            return;
+            return true;
         }
 
         SchedulePlansRequestDto requestDto = new SchedulePlansRequestDto(
@@ -76,7 +74,7 @@ public class PlanScheduleService {
         // AI 호출 실패 시 기존 재배열 결과 유지
         Optional<SchedulePlansResponseDto> response = aiClient.analyzePlans(requestDto);
         if (response.isEmpty() || response.get().getPlans() == null) {
-            return;
+            return false;
         }
 
         detailsByPlanId.values().forEach(PlanDetail::clearRecommendedOrder);
@@ -100,9 +98,13 @@ public class PlanScheduleService {
             if (analysisStatus == null) {
                 log.warn("aiService가 알 수 없는 판정 상태를 반환: {}", scheduled.getStatus());
             }
+            // 판단 근거는 항상 저장하고, 위험 판정일 때만 경고 문구로도 사용
+            String biasedReason = Boolean.TRUE.equals(scheduled.getRiskFlag()) ? scheduled.getReason() : null;
             detail.updateSchedule(order++, analysisStatus, scheduled.getRecordCount(),
-                    successRate, scheduled.getRiskFlag(), scheduled.getReason());
+                    successRate, scheduled.getCompletionRate(), scheduled.getReason(),
+                    scheduled.getRiskFlag(), biasedReason);
         }
+        return true;
     }
 
     private SchedulePlansRequestDto.PendingPlan toPendingPlan(Plan plan) {
@@ -114,29 +116,16 @@ public class PlanScheduleService {
     }
 
     // 결과가 확정된 계획만 이력으로 사용 - 수행일, 생성 시각 순으로 정렬
+    // 진행 중인 계획의 연기는 pending_plans의 postponed_count로만 전달 (이력과 중복 집계 방지)
     private List<SchedulePlansRequestDto.TaskHistory> toTaskHistory(List<Plan> userPlans, LocalDate today) {
         return userPlans.stream()
                 .filter(plan -> plan.getCategory() != null && plan.getEstimatedMinutes() != null)
-                .filter(plan -> toOutcome(plan, today) != null)
+                .filter(plan -> PlanOutcome.of(plan, today) != null)
                 .sorted(Comparator.comparing(Plan::getPlanDate).thenComparing(Plan::getCreatedTime))
                 .map(plan -> new SchedulePlansRequestDto.TaskHistory(
                         plan.getCategory().getName(),
                         plan.getEstimatedMinutes(),
-                        toOutcome(plan, today)))
+                        PlanOutcome.of(plan, today).getLabel()))
                 .toList();
-    }
-
-    // 결과가 확정된 계획만 판정, 아직 진행 중이면 null
-    // 진행 중인 계획의 연기는 pending_plans의 postponed_count로만 전달 (이력과 중복 집계 방지)
-    // 계획한 날 끝내지 못했으면 나중에 완료했어도 미룸으로 판정
-    private String toOutcome(Plan plan, LocalDate today) {
-        boolean postponed = plan.getPostponeCount() > 0;
-        if (plan.getStatus() == PlanStatus.DONE) {
-            return postponed ? OUTCOME_POSTPONED : OUTCOME_DONE;
-        }
-        if (plan.getPlanDate().isBefore(today)) {
-            return postponed ? OUTCOME_POSTPONED : OUTCOME_FAILED;
-        }
-        return null;
     }
 }
