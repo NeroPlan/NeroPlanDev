@@ -43,6 +43,8 @@ services:
       context: backendPlan
     env_file:
       - .env
+    environment:
+      TZ: Asia/Seoul # "오늘 계획" 기준 날짜를 한국 시간으로 - Railway 설정과 동일
     image: backend-plan
     container_name: backendPlan
     ports:
