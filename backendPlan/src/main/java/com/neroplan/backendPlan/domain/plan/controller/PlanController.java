@@ -4,9 +4,11 @@ import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.service.PlanService;
+import com.neroplan.backendPlan.domain.plan.service.PlanStatsService;
 import com.neroplan.backendPlan.global.apiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlanController {
     private final PlanService planService;
+    private final PlanStatsService planStatsService;
 
     // 1. 플랜 생성
     @PostMapping
@@ -47,6 +50,12 @@ public class PlanController {
     @PostMapping("/analyze")
     public ApiResponse<List<GetPlanResponseDto>> analyzeTodayPlans(@AuthenticationPrincipal Long userId) {
         return ApiResponse.onSuccess(planService.analyzeTodayPlans(userId));
+    }
+
+    // 9. 분석 페이지 통계 - 카테고리별 성공률과 수행 패턴
+    @GetMapping("/stats")
+    public ApiResponse<GetPlanStatsResponseDto> getPlanStats(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(planStatsService.getStats(userId));
     }
 
     // 4. 플랜 수정

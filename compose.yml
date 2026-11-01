@@ -4,7 +4,7 @@ services:
   proxy:
     build:
       context: ./proxy # 어디 경로의 도커파일 실행할지 알려주는 부분 -> 현재 경로의 도커파일!
-    image : nginx
+    image : neroplan-proxy
     container_name: proxy
     ports:
       - "8080:80"
@@ -43,6 +43,8 @@ services:
       context: backendPlan
     env_file:
       - .env
+    environment:
+      TZ: Asia/Seoul # "오늘 계획" 기준 날짜를 한국 시간으로 - Railway 설정과 동일
     image: backend-plan
     container_name: backendPlan
     ports:

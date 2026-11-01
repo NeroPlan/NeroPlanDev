@@ -56,13 +56,8 @@ public class PlanService {
                 .estimatedMinutes(requestDto.getEstimatedMinutes())
                 .build();
 
-        // 기존 카테고리 범주에 없으면 aiService가 새 카테고리 이름을 만들어 줌 - 실패 시 미분류로 저장
-        aiClient.classifyCategory(requestDto.getContent(), categoryService.getCategoryNames(userId))
-                .map(name -> categoryService.findOrCreate(userId, name))
-                .ifPresent(plan::assignCategory);
-
+        // 생성 시에는 aiService를 호출하지 않음 - 카테고리 분류와 재배열은 분석하기(analyzeTodayPlans)에서 수행
         Plan savedPlan = planRepository.save(plan);
-        eventPublisher.publishEvent(new PlanChangedEvent(userId, savedPlan.getPlanDate()));
 
         return CreatePlanResponseDto.from(savedPlan);
     }
@@ -105,9 +100,12 @@ public class PlanService {
         }
         LocalDate today = LocalDate.now();
 
-        // 생성 시 카테고리 분류에 실패한 계획은 재배열 대상에서 빠지므로 다시 분류
-        planRepository.findByUserIdAndPlanDate(userId, today).stream()
-                .filter(plan -> plan.getStatus() == PlanStatus.TODO && plan.getCategory() == null)
+        // 생성 시에는 분류하지 않으므로 카테고리가 없는 계획을 여기서 분류
+        // 지난 계획도 AI 이력과 분석 페이지 통계에 들어가야 하므로 날짜·상태와 관계없이 모두 분류
+        // 먼저 만든 계획부터 순서대로 분류해야 새로 생긴 카테고리를 다음 계획이 재사용함
+        planRepository.findByUserId(userId).stream()
+                .filter(plan -> plan.getCategory() == null)
+                .sorted(Comparator.comparing(Plan::getPlanDate).thenComparing(Plan::getCreatedTime))
                 .forEach(plan -> aiClient.classifyCategory(plan.getContent(), categoryService.getCategoryNames(userId))
                         .map(name -> categoryService.findOrCreate(userId, name))
                         .ifPresent(plan::assignCategory));

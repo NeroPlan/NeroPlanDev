@@ -1,5 +1,6 @@
 // components/PlanPage/AnalysisResult.tsx
 import type { Plan } from "../../api/plan";
+import { getRateColor } from "../common/rateColor";
 
 // aiService가 모델로 판정하기 시작하는 카테고리 기록 수
 const MIN_RECORDS_FOR_PREDICTION = 10;
@@ -27,12 +28,6 @@ const getRateInfo = (plan: Plan): { label: string; rate: number | null } => {
         };
     }
     return { label: "성공률 · 기록 없음", rate: null };
-};
-
-const getRateColor = (rate: number) => {
-    if (rate >= 0.7) return "bg-green-500";
-    if (rate >= 0.4) return "bg-yellow-400";
-    return "bg-red-500";
 };
 
 export default function AnalysisResult({

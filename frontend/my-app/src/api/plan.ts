@@ -30,6 +30,36 @@ export interface Plan {
     biasedReason?: string | null;
 }
 
+// 분석 페이지 통계 - 성공률은 계획한 날 완료한 비율(0~1), 기록이 3건 미만이면 null
+export interface CategoryStat {
+    categoryName: string | null; // 미분류면 null
+    recordCount: number;
+    doneCount: number;
+    postponedCount: number;
+    failedCount: number;
+    successRate: number | null;
+    aiRecordCount: number; // AI가 쓰는 기록 수(소요시간이 있는 기록) - 10건부터 성공률 예측
+}
+
+export interface RateStat {
+    label: string;
+    recordCount: number;
+    successRate: number | null;
+}
+
+export interface PlanStats {
+    recordCount: number; // 결과가 확정된 계획 수
+    successRate: number | null;
+    categories: CategoryStat[]; // 기록 많은 순
+    durationStats: RateStat[]; // 예상 소요시간 구간별
+    dailyLoadStats: RateStat[]; // 하루에 세운 계획 수 구간별
+    postponeStat: {
+        postponedCount: number;
+        postponedCompletionRate: number | null; // 미룬 계획 중 결국 완료한 비율
+        onTimeCompletionRate: number | null; // 미루지 않은 계획 중 완료한 비율
+    };
+}
+
 export interface Category {
     categoryId: number;
     name: string;
@@ -60,6 +90,11 @@ export const getPlans = async (): Promise<Plan[]> => {
 // 오늘 계획을 AI로 다시 분석 - 추천 수행 순서대로 정렬된 오늘 계획 전체(완료 포함) 반환
 export const analyzePlans = async (): Promise<Plan[]> => {
     const response = await api.post("/api/v1/plans/analyze");
+    return response.data.result;
+};
+
+export const getPlanStats = async (): Promise<PlanStats> => {
+    const response = await api.get("/api/v1/plans/stats");
     return response.data.result;
 };
 

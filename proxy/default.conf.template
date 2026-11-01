@@ -24,6 +24,9 @@ server {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $forwarded_proto;
+    # Spring은 X-Forwarded-Proto를 받으면 포트를 기본값(80/443)으로 바꾸므로 포트가 포함된 호스트를 함께 전달
+    # 없으면 로컬(localhost:8080)에서 OAuth 리다이렉트가 http://localhost/...로 가서 로그인이 안 됨
+    proxy_set_header X-Forwarded-Host $http_host;
 
      # API 요청은 Spring Boot로 전달
     location /api/v1/plans {
