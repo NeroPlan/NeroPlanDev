@@ -84,7 +84,8 @@ def classify(req: ClassifyRequest):
 def analyze(req: AnalyzeRequest):
     """plans: 위험도 높은 순(추천 수행 순서)으로 정렬된 계획 리스트.
     각 항목: plan_id, status("기록 없음" / "기록 수집 중(규칙판정)" / "판정됨(모델)"), record_count,
-    risk_score, risk_flag (+ 모델 판정이면 risk_prob, reason, duration_bin / 기록이 있으면 recent_failure_streak)
+    risk_score, risk_flag, reason (+ 기록 수집 중이면 completion_rate / 모델 판정이면 risk_prob, duration_bin
+    / 기록이 있으면 recent_failure_streak)
     """
     plans = schedule_plans(
         [p.model_dump() for p in req.pending_plans],

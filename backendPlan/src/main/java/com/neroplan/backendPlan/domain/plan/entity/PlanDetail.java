@@ -17,10 +17,15 @@ public class PlanDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long planDetailId;
 
+    // 모델 판정일 때만 - 예측 성공률(0~1)
     private Double successRate;
+
+    // 기록 수집 중일 때만 - 같은 카테고리의 지금까지 실제 완료율(0~1)
+    private Double completionRate;
 
     private Timestamp recommendedTime;
 
+    // AI 판단 근거 문장 - 판정 상태와 상관없이 항상 채워짐
     private String priorityReason;
 
     private Boolean isBiased;
@@ -44,11 +49,14 @@ public class PlanDetail {
 
     // AI 재배열 결과 반영
     public void updateSchedule(Integer recommendedOrder, AnalysisStatus analysisStatus, Integer recordCount,
-                               Double successRate, Boolean isBiased, String biasedReason) {
+                               Double successRate, Double completionRate, String priorityReason,
+                               Boolean isBiased, String biasedReason) {
         this.recommendedOrder = recommendedOrder;
         this.analysisStatus = analysisStatus;
         this.recordCount = recordCount;
         this.successRate = successRate;
+        this.completionRate = completionRate;
+        this.priorityReason = priorityReason;
         this.isBiased = isBiased;
         this.biasedReason = biasedReason;
     }

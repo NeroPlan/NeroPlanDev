@@ -40,6 +40,7 @@ public class PlanService {
     private final PlanDetailRepository planDetailRepository;
     private final CategoryService categoryService;
     private final AiClient aiClient;
+    private final PlanScheduleService planScheduleService;
     private final ApplicationEventPublisher eventPublisher;
 
     // 1. 플랜 생성
@@ -94,6 +95,27 @@ public class PlanService {
                 .sorted(Comparator.comparing(GetPlanResponseDto::getRecommendedOrder,
                         Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
+    }
+
+    // 8. 오늘 계획 분석 - 미리 계산된 결과가 없거나 오래됐을 수 있으므로 요청 시 다시 계산
+    @Transactional
+    public List<GetPlanResponseDto> analyzeTodayPlans(Long userId) {
+        if (userId == null) {
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        LocalDate today = LocalDate.now();
+
+        // 생성 시 카테고리 분류에 실패한 계획은 재배열 대상에서 빠지므로 다시 분류
+        planRepository.findByUserIdAndPlanDate(userId, today).stream()
+                .filter(plan -> plan.getStatus() == PlanStatus.TODO && plan.getCategory() == null)
+                .forEach(plan -> aiClient.classifyCategory(plan.getContent(), categoryService.getCategoryNames(userId))
+                        .map(name -> categoryService.findOrCreate(userId, name))
+                        .ifPresent(plan::assignCategory));
+
+        if (!planScheduleService.recalculate(userId, today)) {
+            throw new GeneralException(ErrorStatus._AI_ANALYSIS_FAILED);
+        }
+        return getTodayPlansByUserId(userId);
     }
 
     // 4. 플랜 수정

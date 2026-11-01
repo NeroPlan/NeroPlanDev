@@ -40,11 +40,15 @@ public class SchedulePlansResponseDto {
         @JsonProperty("risk_flag")
         private Boolean riskFlag;
 
+        // 기록 수집 중일 때만 존재 - 같은 카테고리의 지금까지 실제 완료율(0~1)
+        @JsonProperty("completion_rate")
+        private Double completionRate;
+
         // 모델 판정일 때만 존재
         @JsonProperty("risk_prob")
         private Double riskProb;
 
-        // 모델 판정일 때만 존재 - 위험 근거 문장
+        // 판단 근거 문장 - 모든 판정 상태에서 존재
         private String reason;
     }
 }

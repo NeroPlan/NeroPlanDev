@@ -7,7 +7,7 @@ import AnalyzeButton from "../components/PlanPage/button";
 import AnalysisResult from "../components/PlanPage/AnalysisResult";
 import { saveAccessToken } from "../api/auth";
 import { getErrorMessage } from "../api/api";
-import { getPlans } from "../api/plan";
+import { analyzePlans } from "../api/plan";
 import type { Plan } from "../api/plan";
 
 export default function PlanPage() {
@@ -33,22 +33,18 @@ export default function PlanPage() {
         }
     }, [location.pathname, location.search, navigate]);
 
-    // AI 재배열은 계획이 바뀔 때마다 서버에서 미리 계산되므로, 오늘 계획을 다시 불러와 결과만 보여줌
+    // 서버가 aiService로 오늘 계획을 다시 분석하고 추천 순서대로 돌려줌
     const handleAnalyze = async () => {
         setAnalyzing(true);
         setAnalyzeError("");
 
         try {
-            const plans = await getPlans();
+            const plans = await analyzePlans();
 
-            setAnalyzedPlans(
-                plans
-                    .filter((p) => p.status === "TODO" && p.recommendedOrder != null)
-                    .sort((a, b) => (a.recommendedOrder ?? 0) - (b.recommendedOrder ?? 0))
-            );
+            setAnalyzedPlans(plans.filter((p) => p.status === "TODO"));
         } catch (error) {
-            console.error("분석 결과를 불러오지 못했습니다:", error);
-            setAnalyzeError(getErrorMessage(error, "분석 결과를 불러오지 못했습니다."));
+            console.error("계획을 분석하지 못했습니다:", error);
+            setAnalyzeError(getErrorMessage(error, "계획을 분석하지 못했습니다."));
         } finally {
             setAnalyzing(false);
         }

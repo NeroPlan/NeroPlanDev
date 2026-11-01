@@ -55,7 +55,7 @@ for i, p in enumerate(pending_plans, 1):
 print("\n--- 재배열 후 (hard_first) ---")
 for i, r in enumerate(schedule_plans(pending_plans, task_history, model, threshold), 1):
     risk_display = r.get("risk_prob", r["risk_score"])
+    rate_display = f", 완료율={r['completion_rate']}" if "completion_rate" in r else ""
     print(f"{i}. [{r['category']}] {r['title']}  ({r['estimated_minutes']}분, 이 계획 미룸 {r['postponed_count']}회)  "
-          f"status={r['status']}, risk={risk_display}, risk_flag={r['risk_flag']}")
-    if "reason" in r:
-        print(f"     └ 근거: {r['reason']}")
+          f"status={r['status']}, risk={risk_display}, risk_flag={r['risk_flag']}{rate_display}")
+    print(f"     └ 근거: {r['reason']}")
