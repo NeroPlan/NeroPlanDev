@@ -9,13 +9,13 @@ interface StatCardProps {
 
 export default function StatCard({ title, insight, children }: StatCardProps) {
     return (
-        <section className="bg-white rounded-3xl p-6 shadow-sm">
+        <section className="bg-white rounded-3xl p-6 shadow-sm text-black">
             <h2 className="text-xl font-bold text-center mb-3">{title}</h2>
 
             <hr className="mb-4" />
 
             {insight && (
-                <p className="mb-4 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                <p className="mb-4 text-sm font-semibold">
                     {insight}
                 </p>
             )}

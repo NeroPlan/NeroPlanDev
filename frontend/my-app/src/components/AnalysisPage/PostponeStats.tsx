@@ -24,7 +24,7 @@ export default function PostponeStats({ stat, onTimeCount }: PostponeStatsProps)
                 <RateRow label="미루지 않은 계획" recordCount={onTimeCount} rate={stat.onTimeCompletionRate} />
                 <RateRow label="한 번 이상 미룬 계획" recordCount={stat.postponedCount} rate={stat.postponedCompletionRate} />
             </div>
-            <p className="mt-4 text-xs text-gray-400">미룬 뒤에라도 완료한 비율이에요.</p>
+            <p className="mt-4 text-xs">미룬 뒤에라도 완료한 비율이에요.</p>
         </StatCard>
     );
 }
