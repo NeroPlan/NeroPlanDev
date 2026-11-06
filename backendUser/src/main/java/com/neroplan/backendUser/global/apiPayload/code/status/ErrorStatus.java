@@ -29,6 +29,9 @@ public enum ErrorStatus implements BaseErrorCode {
     _IMAGE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "400", "지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif)"),
     _USER_NOT_MATCH(HttpStatus.BAD_REQUEST, "400", "해당 유저와 일치하지 않습니다."),
     _USER_AlREADY_REGISTERED(HttpStatus.BAD_REQUEST, "400", "이미 등록된 사용자입니다."),
+    _INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "400", "이름은 1~30자로 입력하세요."),
+    _IMAGE_TOO_LARGE(HttpStatus.BAD_REQUEST, "400", "프로필 사진은 2MB 이하만 올릴 수 있습니다."),
+    _PROFILE_IMAGE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "400", "지원하지 않는 이미지 형식입니다. (jpg, png, gif, webp)"),
 
     // 401 Unauthorized
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "401", "인증이 필요합니다."),
@@ -45,6 +48,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // 404 Not Found
     _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 토큰을 찾을 수 없습니다."),
     _USER_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 유저를 찾을 수 없습니다."),
+    _PROFILE_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "프로필 사진이 없습니다."),
 
     // (Optional) 선택 추가 가능
     _METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "405", "허용되지 않은 메서드입니다."),

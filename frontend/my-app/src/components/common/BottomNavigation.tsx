@@ -8,7 +8,7 @@ const menus = [
 
 export default function BottomNavigation() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white">
+    <nav className="shrink-0 border-t border-slate-200 bg-white">
       <div className="mx-auto flex h-[76px] w-full max-w-[468px] items-center justify-around px-4">
         {menus.map((menu) => (
           <NavLink

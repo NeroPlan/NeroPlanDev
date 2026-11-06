@@ -7,6 +7,10 @@ import com.neroplan.backendUser.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -50,9 +54,19 @@ public class SecurityConfig {
                                 "/oauth2/**"
                         )
                         .permitAll()
+                        // <img>로 불러오는 프로필 사진은 토큰 없이 조회
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/*/profile-image")
+                        .permitAll()
                         // 나머지는 인증 필요
                         .anyRequest()
                         .authenticated()
+                )
+                // API는 로그인 페이지로 리다이렉트(302)하지 않고 401을 돌려줌 - 프론트가 401을 받으면 로그인 화면으로 이동
+                .exceptionHandling(exception -> exception
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                PathPatternRequestMatcher.withDefaults().matcher("/api/**")
+                        )
                 )
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth -> oauth
