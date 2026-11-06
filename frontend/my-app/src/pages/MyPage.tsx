@@ -1,15 +1,25 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getErrorMessage } from "../api/api";
+import { getMyProfile, toProfileImageUrl } from "../api/user";
+import type { UserProfile } from "../api/user";
 import MyPageMenu from "../components/common/MyPageMenu";
 import ProfileCard from "../components/common/ProfileCard";
 
 export default function MyPage() {
   const navigate = useNavigate();
 
-  // 나중에 로그인 사용자 API 데이터로 교체
-  const user = {
-    name: "홍길동",
-    imageUrl: "",
-  };
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    getMyProfile()
+      .then(setUser)
+      .catch((error) => {
+        console.error("내 정보를 불러오지 못했습니다:", error);
+        setErrorMessage(getErrorMessage(error, "내 정보를 불러오지 못했습니다."));
+      });
+  }, []);
 
 const handleLogout = () => {
   const confirmed = window.confirm("로그아웃 하시겠습니까?");
@@ -40,18 +50,19 @@ const handleLogout = () => {
         마이페이지
       </h1>
 
-      <ProfileCard name={user.name} imageUrl={user.imageUrl} />
+      {user ? (
+        <ProfileCard name={user.nickname} imageUrl={toProfileImageUrl(user.profileImage)} />
+      ) : (
+        <p className="text-center text-sm text-slate-500">
+          {errorMessage || "내 정보를 불러오는 중..."}
+        </p>
+      )}
 
       <MyPageMenu
         items={[
           {
             label: "내 정보 수정하기",
-            onClick: () => alert("내 정보 수정 기능을 준비 중입니다."),
-            // onClick: () => navigate("/mypage/edit"),
-          },
-          {
-            label: "초기 정보 수정하기", 
-            onClick: () => navigate("/onboarding"),
+            onClick: () => navigate("/mypage/edit"),
           },
           {
             label: "로그아웃",
