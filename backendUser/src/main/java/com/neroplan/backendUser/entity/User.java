@@ -40,4 +40,13 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 구글 사진 주소 또는 직접 올린 사진의 조회 주소
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 }
