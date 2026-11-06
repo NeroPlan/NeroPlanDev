@@ -12,6 +12,7 @@ export default function ProfileCard({ name, imageUrl }: ProfileCardProps) {
         <img
           src={imageUrl}
           alt={`${name} 프로필`}
+          referrerPolicy="no-referrer" // 구글 사진은 referrer가 붙으면 막힐 때가 있음
           className="mx-auto h-24 w-24 rounded-full object-cover"
         />
       ) : (

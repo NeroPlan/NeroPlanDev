@@ -35,6 +35,7 @@ server {
 
     location /api/v1/users {
         proxy_pass $backend_user;
+        client_max_body_size 5m; # 프로필 사진 업로드 - 기본값 1m
     }
 
     # 구글 로그인 - 시작(/api/v1/auth, /oauth2)과 구글 콜백(/login/oauth2)을 모두 backendUser로 전달
