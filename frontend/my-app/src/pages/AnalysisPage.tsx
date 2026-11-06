@@ -28,7 +28,7 @@ export default function AnalysisPage() {
     }
 
     if (!stats) {
-        return <p className="text-center text-gray-500">통계를 불러오는 중...</p>;
+        return <p className="text-center text-black">통계를 불러오는 중...</p>;
     }
 
     return (
@@ -68,9 +68,9 @@ export default function AnalysisPage() {
 function Summary({ stats }: { stats: PlanStats }) {
     if (stats.recordCount === 0) {
         return (
-            <section className="bg-white rounded-3xl p-6 shadow-sm text-center space-y-2">
+            <section className="bg-white rounded-3xl p-6 shadow-sm text-center space-y-2 text-black">
                 <h2 className="text-xl font-bold">아직 분석할 기록이 없어요</h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm">
                     계획을 완료하거나 하루가 지나면 결과가 쌓이고, 여기에서 내 계획 패턴을 볼 수 있어요.
                 </p>
                 <Link
@@ -84,12 +84,12 @@ function Summary({ stats }: { stats: PlanStats }) {
     }
 
     return (
-        <section className="bg-white rounded-3xl p-6 shadow-sm text-center">
-            <p className="text-sm font-semibold text-gray-500">전체 성공률</p>
-            <p className="mt-1 text-5xl font-bold text-blue-600">
+        <section className="bg-white rounded-3xl p-6 shadow-sm text-center text-black">
+            <p className="text-sm font-semibold">전체 성공률</p>
+            <p className="mt-1 text-5xl font-bold">
                 {stats.successRate != null ? toPercent(stats.successRate) : "-"}
             </p>
-            <p className="mt-3 text-sm text-gray-500">
+            <p className="mt-3 text-sm">
                 결과가 나온 계획 {stats.recordCount}건 중 계획한 날 완료한 비율이에요
             </p>
         </section>

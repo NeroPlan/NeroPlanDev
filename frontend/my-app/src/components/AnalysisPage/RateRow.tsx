@@ -1,5 +1,5 @@
 // components/AnalysisPage/RateRow.tsx
-import { getMissingRateText, getRateColor, toPercent } from "../common/rateColor";
+import { getMissingRateText, toPercent } from "../common/rateColor";
 
 interface RateRowProps {
     label: string;
@@ -10,21 +10,21 @@ interface RateRowProps {
 export default function RateRow({ label, recordCount, rate }: RateRowProps) {
     return (
         <div className="space-y-1">
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm">
                 <span>
                     {label}
-                    <span className="ml-1 text-gray-400">· {recordCount}건</span>
+                    <span className="ml-1">· {recordCount}건</span>
                 </span>
                 {rate != null ? (
                     <span className="font-semibold">{toPercent(rate)}</span>
                 ) : (
-                    <span className="text-gray-400">{getMissingRateText(recordCount)}</span>
+                    <span>{getMissingRateText(recordCount)}</span>
                 )}
             </div>
             <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                 {rate != null && (
                     <div
-                        className={`h-full rounded-full ${getRateColor(rate)}`}
+                        className="h-full rounded-full bg-blue-600"
                         style={{ width: toPercent(rate) }}
                     />
                 )}

@@ -6,6 +6,13 @@ import StatCard from "./StatCard";
 // aiService가 모델로 성공률을 예측하기 시작하는 카테고리 기록 수
 const MIN_RECORDS_FOR_PREDICTION = 10;
 
+// 결과별 색 - 파랑 한 톤에서 명도로만 구분
+const OUTCOME_COLORS = {
+    done: "bg-blue-700",
+    postponed: "bg-blue-400",
+    failed: "bg-blue-200",
+};
+
 interface CategoryStatsProps {
     categories: CategoryStat[]; // 기록 많은 순
 }
@@ -36,18 +43,18 @@ export default function CategoryStats({ categories }: CategoryStatsProps) {
                         <div className="flex items-center justify-between">
                             <span className="text-lg font-semibold">{c.categoryName ?? "미분류"}</span>
                             {c.successRate != null ? (
-                                <span className="text-lg font-bold text-blue-600">{toPercent(c.successRate)}</span>
+                                <span className="text-lg font-bold">{toPercent(c.successRate)}</span>
                             ) : (
-                                <span className="text-sm text-gray-400">{getMissingRateText(c.recordCount)}</span>
+                                <span className="text-sm">{getMissingRateText(c.recordCount)}</span>
                             )}
                         </div>
 
                         <OutcomeBar stat={c} />
 
-                        <div className="flex gap-3 text-xs text-gray-500">
-                            <Legend color="bg-green-500" label="완료" count={c.doneCount} />
-                            <Legend color="bg-yellow-400" label="미룸" count={c.postponedCount} />
-                            <Legend color="bg-red-500" label="실패" count={c.failedCount} />
+                        <div className="flex gap-3 text-xs">
+                            <Legend color={OUTCOME_COLORS.done} label="완료" count={c.doneCount} />
+                            <Legend color={OUTCOME_COLORS.postponed} label="미룸" count={c.postponedCount} />
+                            <Legend color={OUTCOME_COLORS.failed} label="실패" count={c.failedCount} />
                         </div>
 
                         {c.categoryName != null && <PredictionProgress aiRecordCount={c.aiRecordCount} />}
@@ -61,9 +68,9 @@ export default function CategoryStats({ categories }: CategoryStatsProps) {
 // 완료 / 미룸 / 실패 비율을 한 줄에 쌓아서 표시
 function OutcomeBar({ stat }: { stat: CategoryStat }) {
     const segments = [
-        { color: "bg-green-500", count: stat.doneCount },
-        { color: "bg-yellow-400", count: stat.postponedCount },
-        { color: "bg-red-500", count: stat.failedCount },
+        { color: OUTCOME_COLORS.done, count: stat.doneCount },
+        { color: OUTCOME_COLORS.postponed, count: stat.postponedCount },
+        { color: OUTCOME_COLORS.failed, count: stat.failedCount },
     ];
 
     return (
@@ -92,11 +99,11 @@ function Legend({ color, label, count }: { color: string; label: string; count: 
 
 function PredictionProgress({ aiRecordCount }: { aiRecordCount: number }) {
     if (aiRecordCount >= MIN_RECORDS_FOR_PREDICTION) {
-        return <p className="text-xs font-semibold text-blue-600">AI가 성공률을 예측하고 있어요</p>;
+        return <p className="text-xs font-semibold">AI가 성공률을 예측하고 있어요</p>;
     }
 
     return (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs">
             AI 예측까지 기록 {aiRecordCount}/{MIN_RECORDS_FOR_PREDICTION} · {MIN_RECORDS_FOR_PREDICTION - aiRecordCount}건 더 필요해요
         </p>
     );
