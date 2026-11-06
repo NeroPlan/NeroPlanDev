@@ -32,7 +32,7 @@ export default function AnalysisPage() {
     }
 
     return (
-        <div className="space-y-8 pb-24">
+        <div className="space-y-8">
             <Summary stats={stats} />
 
             {stats.recordCount > 0 && (
