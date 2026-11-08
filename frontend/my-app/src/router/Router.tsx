@@ -12,6 +12,7 @@ import LoginPage from "../pages/LoginPage";
 import PlanPage from "../pages/PlanPage";
 import AnalysisPage from "../pages/AnalysisPage";
 import OnboardingPage from "../pages/OnboardingPage";
+import ProfileEditPage from "../pages/ProfileEditPage";
 
 const router = createBrowserRouter([
     {
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <MyPage />,
+            },
+            {
+                path: "edit",
+                element: <ProfileEditPage />,
             },
         ],
     },
