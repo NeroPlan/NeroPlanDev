@@ -15,7 +15,15 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # 스키마는 Flyway(src/main/resources/db/migration)가 관리하고, Hibernate는 엔티티와 맞는지 검사만 함
+      ddl-auto: validate
+
+  flyway:
+    # backendPlan과 같은 DB를 쓸 수 있으므로 이력 테이블을 서비스별로 분리
+    table: flyway_schema_history_user
+    # 이미 테이블이 있는 기존 DB에서도 시작할 수 있게 함 - V1은 IF NOT EXISTS라 기존 DB에서는 아무것도 바꾸지 않음
+    baseline-on-migrate: true
+    baseline-version: 0
 
   security:
     oauth2:
@@ -30,11 +38,15 @@ spring:
               - email
 logging:
   level:
-    org.springframework.security: TRACE
+    # TRACE는 인증 과정을 모두 로그에 남김 - 운영 기본값 INFO, 로컬 디버깅 시 .env에 LOG_LEVEL_SECURITY=TRACE
+    org.springframework.security: ${LOG_LEVEL_SECURITY:INFO}
 
 jwt:
   key: ${JWT_KEY}
 
 app:
+  # refresh token 쿠키 - 로컬(http://localhost)도 브라우저가 secure 쿠키를 허용하므로 기본값 true
+  cookie:
+    secure: ${COOKIE_SECURE:true}
   oauth2:
     redirect-url: ${OAUTH2_REDIRECT_URL:http://localhost:8080/plan}

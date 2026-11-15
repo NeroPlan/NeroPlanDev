@@ -22,6 +22,8 @@ import java.util.List;
 public class TokenProvider {
 
     private static final String ROLE = "role";
+    private static final String TYPE = "typ";
+    private static final String TYPE_ACCESS = "access";
 
     @Value("${jwt.key}")
     private String key;
@@ -71,9 +73,11 @@ public class TokenProvider {
         try {
             Claims claims = parseClaims(token);
 
+            // refresh token(typ=refresh)은 API 호출에 쓸 수 없음 - backendUser TokenProvider와 같은 규칙
             return claims.getExpiration() != null
                     && claims.getExpiration()
-                    .after(new Date());
+                    .after(new Date())
+                    && TYPE_ACCESS.equals(claims.get(TYPE, String.class));
 
         } catch (JwtException
                  | IllegalArgumentException e) {

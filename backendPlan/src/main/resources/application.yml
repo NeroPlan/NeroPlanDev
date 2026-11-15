@@ -10,19 +10,29 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # 스키마는 Flyway(src/main/resources/db/migration)가 관리하고, Hibernate는 엔티티와 맞는지 검사만 함
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    show-sql: true
+        format_sql: ${JPA_SHOW_SQL:false}
+    # SQL 로그는 로컬에서만 필요 - .env에 JPA_SHOW_SQL=true로 켬
+    show-sql: ${JPA_SHOW_SQL:false}
+
+  flyway:
+    # backendUser와 같은 DB를 쓸 수 있으므로 이력 테이블을 서비스별로 분리
+    table: flyway_schema_history_plan
+    # 이미 테이블이 있는 기존 DB에서도 시작할 수 있게 함 - V1은 IF NOT EXISTS라 기존 DB에서는 아무것도 바꾸지 않음
+    baseline-on-migrate: true
+    baseline-version: 0
 
 server:
   port: 8080
 
 logging:
     level:
-      org.springframework.web: DEBUG
+      # 운영 기본값 INFO - 로컬에서 자세히 보려면 .env에 LOG_LEVEL_WEB=DEBUG
+      org.springframework.web: ${LOG_LEVEL_WEB:INFO}
 
 jwt:
   key: ${JWT_KEY}
