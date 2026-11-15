@@ -44,7 +44,8 @@ public class PlanDetail {
 
     @NotNull
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="plan_id")
+    // 계획 하나에 상세는 하나 - 동시에 재배열이 돌아도 중복 행이 생기지 않도록 DB에서 막음
+    @JoinColumn(name="plan_id", unique = true)
     private Plan plan;
 
     // AI 재배열 결과 반영

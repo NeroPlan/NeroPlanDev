@@ -27,8 +27,6 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -81,8 +79,7 @@ public class PlanService {
     @Transactional(readOnly = true)
     public List<GetPlanResponseDto> getTodayPlansByUserId(Long userId){
         List<Plan> plans = planRepository.findByUserIdAndPlanDate(userId, LocalDate.now());
-        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findByPlanIn(plans).stream()
-                .collect(Collectors.toMap(detail -> detail.getPlan().getPlanId(), Function.identity()));
+        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findMapByPlanIn(plans);
 
         // AI 추천 순서대로 정렬, 순서가 없는 계획(분석 전/완료)은 뒤로
         return plans.stream()
