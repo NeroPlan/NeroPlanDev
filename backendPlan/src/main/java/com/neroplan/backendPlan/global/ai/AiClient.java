@@ -25,6 +25,8 @@ public class AiClient {
     private final RestClient aiRestClient;
 
     // 1. 계획 내용으로 카테고리 분류 - 기존 카테고리에 없으면 aiService가 새 이름을 만들어 반환
+    // LLM이 분류하지 못하면 Optional.empty(), aiService 자체에 연결·응답 실패하면 AiServiceUnavailableException
+    // (여러 계획을 연달아 분류할 때 장애 상황에서 계획마다 타임아웃을 기다리지 않도록 구분)
     public Optional<String> classifyCategory(String content, List<String> categories) {
         try {
             ClassifyCategoryResponseDto response = aiRestClient.post()
@@ -35,7 +37,7 @@ public class AiClient {
             return Optional.ofNullable(response).map(ClassifyCategoryResponseDto::getCategory);
         } catch (RestClientException e) {
             log.warn("aiService 카테고리 분류 실패: {}", e.getMessage());
-            return Optional.empty();
+            throw new AiServiceUnavailableException("aiService 카테고리 분류 실패", e);
         }
     }
 

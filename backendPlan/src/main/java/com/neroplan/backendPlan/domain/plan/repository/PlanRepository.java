@@ -13,6 +13,8 @@ public interface PlanRepository extends JpaRepository<Plan, Long>{
     @EntityGraph(attributePaths = "category")
     List<Plan> findByUserId(Long userId);
     Optional<Plan> findByPlanIdAndUserId(Long planId, Long userId);
+    // 분석하기에서 카테고리 분류가 필요한 계획
+    List<Plan> findByUserIdAndCategoryIsNull(Long userId);
     @EntityGraph(attributePaths = "category")
     List<Plan> findByUserIdAndPlanDate(Long userId, LocalDate planDate);
 }

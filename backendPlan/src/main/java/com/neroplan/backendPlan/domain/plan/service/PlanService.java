@@ -11,22 +11,28 @@ import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
 import com.neroplan.backendPlan.domain.plan.event.PlanChangedEvent;
 import com.neroplan.backendPlan.domain.plan.repository.PlanDetailRepository;
 import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
+import com.neroplan.backendPlan.domain.category.entity.Category;
 import com.neroplan.backendPlan.global.ai.AiClient;
+import com.neroplan.backendPlan.global.ai.AiServiceUnavailableException;
 import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
 import com.neroplan.backendPlan.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,12 +40,16 @@ import java.util.Map;
 @Transactional
 public class PlanService {
 
+    // 분석하기 한 번에 LLM으로 분류할 최대 계획 수 - 미분류 계획이 많이 쌓여도 응답 시간이 끝없이 늘지 않도록 제한
+    private static final int MAX_CLASSIFY_PER_REQUEST = 20;
+
     private final PlanRepository planRepository;
     private final PlanDetailRepository planDetailRepository;
     private final CategoryService categoryService;
     private final AiClient aiClient;
     private final PlanScheduleService planScheduleService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     // 1. 플랜 생성
     @Transactional
@@ -90,27 +100,70 @@ public class PlanService {
     }
 
     // 8. 오늘 계획 분석 - 미리 계산된 결과가 없거나 오래됐을 수 있으므로 요청 시 다시 계산
-    @Transactional
+    // LLM 호출이 오래 걸릴 수 있어 전체를 하나의 트랜잭션으로 묶지 않음 (DB 커넥션을 붙잡지 않도록)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<GetPlanResponseDto> analyzeTodayPlans(Long userId) {
         if (userId == null) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
         LocalDate today = LocalDate.now();
 
-        // 생성 시에는 분류하지 않으므로 카테고리가 없는 계획을 여기서 분류
-        // 지난 계획도 AI 이력과 분석 페이지 통계에 들어가야 하므로 날짜·상태와 관계없이 모두 분류
-        // 먼저 만든 계획부터 순서대로 분류해야 새로 생긴 카테고리를 다음 계획이 재사용함
-        planRepository.findByUserId(userId).stream()
-                .filter(plan -> plan.getCategory() == null)
-                .sorted(Comparator.comparing(Plan::getPlanDate).thenComparing(Plan::getCreatedTime))
-                .forEach(plan -> aiClient.classifyCategory(plan.getContent(), categoryService.getCategoryNames(userId))
-                        .map(name -> categoryService.findOrCreate(userId, name))
-                        .ifPresent(plan::assignCategory));
+        classifyUncategorizedPlans(userId, today);
 
+        // 재배열은 PlanScheduleService.recalculate의 자체 트랜잭션에서 저장
         if (!planScheduleService.recalculate(userId, today)) {
             throw new GeneralException(ErrorStatus._AI_ANALYSIS_FAILED);
         }
-        return getTodayPlansByUserId(userId);
+        // 같은 클래스 안의 호출이라 @Transactional이 적용되지 않으므로 직접 트랜잭션을 염
+        return transactionTemplate.execute(status -> getTodayPlansByUserId(userId));
+    }
+
+    // 생성 시에는 분류하지 않으므로 카테고리가 없는 계획을 여기서 분류
+    // 지난 계획도 AI 이력과 분석 페이지 통계에 들어가야 하므로 날짜·상태와 관계없이 분류하되,
+    // 오늘 계획을 먼저(바로 재배열 대상), 그다음 지난 계획을 오래된 순으로 요청당 최대 MAX_CLASSIFY_PER_REQUEST개만 분류
+    // 남은 계획은 다음 분석하기 때 이어서 분류됨
+    private void classifyUncategorizedPlans(Long userId, LocalDate today) {
+        List<Plan> targets = planRepository.findByUserIdAndCategoryIsNull(userId).stream()
+                .sorted(Comparator.comparing((Plan plan) -> !today.equals(plan.getPlanDate()))
+                        .thenComparing(Plan::getPlanDate)
+                        .thenComparing(Plan::getCreatedTime))
+                .limit(MAX_CLASSIFY_PER_REQUEST)
+                .toList();
+        if (targets.isEmpty()) {
+            return;
+        }
+
+        // 새로 생긴 카테고리를 다음 계획 분류 때 재사용하도록 이름 목록을 직접 갱신
+        List<String> categoryNames = new ArrayList<>(categoryService.getCategoryNames(userId));
+        for (Plan plan : targets) {
+            Optional<String> name;
+            try {
+                // 트랜잭션 밖에서 호출 - 응답을 기다리는 동안 DB 커넥션을 쓰지 않음
+                name = aiClient.classifyCategory(plan.getContent(), List.copyOf(categoryNames));
+            } catch (AiServiceUnavailableException e) {
+                // aiService 장애 시 남은 계획마다 타임아웃을 기다리지 않고 중단
+                break;
+            }
+            name.ifPresent(categoryName -> transactionTemplate.executeWithoutResult(status ->
+                    assignCategory(userId, plan.getPlanId(), categoryName, categoryNames)));
+        }
+    }
+
+    // 분류 결과 저장 - 계획마다 짧은 트랜잭션으로 실행
+    private void assignCategory(Long userId, Long planId, String categoryName, List<String> categoryNames) {
+        planRepository.findByPlanIdAndUserId(planId, userId)
+                // 분류하는 동안 삭제됐거나 다른 요청이 먼저 분류했으면 건너뜀
+                .filter(plan -> plan.getCategory() == null)
+                .ifPresent(plan -> {
+                    Category category = categoryService.findOrCreate(userId, categoryName);
+                    if (category == null) {
+                        return;
+                    }
+                    plan.assignCategory(category);
+                    if (!categoryNames.contains(category.getName())) {
+                        categoryNames.add(category.getName());
+                    }
+                });
     }
 
     // 4. 플랜 수정
