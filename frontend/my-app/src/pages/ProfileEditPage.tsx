@@ -130,7 +130,7 @@ export default function ProfileEditPage() {
   const changed = newImage !== null || nickname.trim() !== user.nickname;
 
   return (
-    <div className="mx-auto w-full max-w-[468px] space-y-6 pb-10">
+    <div className="mx-auto w-full max-w-[26rem] space-y-6 pb-10">
       <h1 className="pt-2 text-center text-2xl font-bold text-slate-900">
         내 정보 수정하기
       </h1>

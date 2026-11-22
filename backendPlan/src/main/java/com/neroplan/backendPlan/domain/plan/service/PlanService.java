@@ -2,6 +2,7 @@ package com.neroplan.backendPlan.domain.plan.service;
 
 import com.neroplan.backendPlan.domain.category.service.CategoryService;
 import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.FocusPlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
@@ -12,6 +13,7 @@ import com.neroplan.backendPlan.domain.plan.event.PlanChangedEvent;
 import com.neroplan.backendPlan.domain.plan.repository.PlanDetailRepository;
 import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
 import com.neroplan.backendPlan.domain.category.entity.Category;
+import com.neroplan.backendPlan.domain.category.repository.CategoryRepository;
 import com.neroplan.backendPlan.global.ai.AiClient;
 import com.neroplan.backendPlan.global.ai.AiServiceUnavailableException;
 import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
@@ -49,6 +51,7 @@ public class PlanService {
     private final PlanRepository planRepository;
     private final PlanDetailRepository planDetailRepository;
     private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
     private final AiClient aiClient;
     private final PlanScheduleService planScheduleService;
     private final ApplicationEventPublisher eventPublisher;
@@ -217,6 +220,19 @@ public class PlanService {
         return GetPlanResponseDto.from(plan);
     }
 
+    // 13. 집중 기록 - 타이머로 집중한 시간을 누적하고, complete면 완료 처리
+    @Transactional
+    public GetPlanResponseDto recordFocus(Long userId, Long planId, FocusPlanRequestDto requestDto) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
+        plan.addFocusMinutes(requestDto.getMinutes());
+        if (requestDto.isComplete() && plan.getStatus() != PlanStatus.DONE) {
+            plan.complete();
+            eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
+        }
+        return GetPlanResponseDto.from(plan);
+    }
+
     // 7. 플랜 연기 - 수행일(planDate)만 변경하고 연기 횟수 증가
     @Transactional
     public GetPlanResponseDto postponePlan(Long userId, Long planId, PostponePlanRequestDto requestDto) {
@@ -238,6 +254,17 @@ public class PlanService {
         eventPublisher.publishEvent(new PlanChangedEvent(userId, fromDate));
         eventPublisher.publishEvent(new PlanChangedEvent(userId, toDate));
         return GetPlanResponseDto.from(plan);
+    }
+
+    // 회원 탈퇴 - 이 사용자의 계획 상세, 계획, 카테고리를 모두 삭제 (FK 순서대로)
+    @Transactional
+    public void deleteAllData(Long userId) {
+        if (userId == null) {
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        planDetailRepository.deleteAllByUserId(userId);
+        planRepository.deleteAllByUserId(userId);
+        categoryRepository.deleteAllByUserId(userId);
     }
 
     // 5. 플랜 삭제

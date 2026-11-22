@@ -1,5 +1,6 @@
 // components/common/PlanInput.tsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { completePlan, createPlan, deletePlan, postponePlan, updatePlan } from "../../api/plan";
 import type { Plan } from "../../api/plan";
 import { getErrorMessage } from "../../api/api";
@@ -9,6 +10,7 @@ interface PlanInputProps {
     planDate: string; // 이 카드가 보여주는 날짜(YYYY-MM-DD) - 새 계획도 이 날짜로 생성
     plans: Plan[]; // 그 날짜의 계획 - 목록은 PlanPage가 달력 기간 단위로 불러옴
     readOnly: boolean; // 지난 날짜는 결과만 조회
+    canFocus?: boolean; // 오늘 계획이면 집중 타이머로 바로 이동 가능
     onUpsert: (plan: Plan) => void; // 추가·수정·완료·연기 결과 반영 (연기는 planDate가 바뀐 계획)
     onRemove: (planId: number) => void;
 }
@@ -18,6 +20,7 @@ export default function PlanInput({
     planDate,
     plans,
     readOnly,
+    canFocus = false,
     onUpsert,
     onRemove,
 }: PlanInputProps) {
@@ -207,9 +210,16 @@ export default function PlanInput({
                     </p>
                 )}
 
-                <ul className="list-disc pl-6 space-y-1 text-lg font-semibold">
+                <ul className="space-y-3 text-lg font-semibold">
                     {plans.map((p) => (
-                        <li key={p.planId} className="flex items-center gap-2">
+                        <li
+                            key={p.planId}
+                            className={
+                                editingId === p.planId
+                                    ? "flex items-center gap-2"
+                                    : "space-y-1 border-b border-gray-100 pb-3 last:border-0 last:pb-0"
+                            }
+                        >
                             {editingId === p.planId ? (
                                 <>
                                     <input
@@ -242,58 +252,67 @@ export default function PlanInput({
                                 </>
                             ) : (
                                 <>
-                                    <label className="flex items-center gap-1 text-sm font-normal text-gray-600">
+                                    {/* 1줄: 완료 체크 + 계획 이름 - 이름은 줄바꿈 없이 좌우 스크롤 */}
+                                    <div className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
+                                            aria-label="완료"
                                             checked={p.status === "DONE"}
                                             disabled={readOnly}
                                             onChange={(e) => handleToggleComplete(p.planId, e.target.checked)}
+                                            className="h-4 w-4 shrink-0"
                                         />
-                                        완료
-                                    </label>
-                                    <span
-                                        className={`flex-1 ${p.status === "DONE" ? "line-through text-gray-400" : ""}`}
-                                    >
-                                        {p.content}
-                                    </span>
-                                    {p.estimatedMinutes != null && (
-                                        <span className="text-sm text-gray-500 font-normal">
-                                            {p.estimatedMinutes}분
+                                        <span
+                                            className={`min-w-0 flex-1 overflow-x-auto whitespace-nowrap [scrollbar-width:thin] ${p.status === "DONE" ? "line-through text-gray-400" : ""}`}
+                                            title={p.content}
+                                        >
+                                            {p.content}
                                         </span>
-                                    )}
-                                    {readOnly ? (
-                                        // 지난 날짜는 결과만 표시 - 끝내 안 한 계획은 미완료
-                                        p.status !== "DONE" && (
-                                            <span className="text-sm text-gray-500 font-normal">미완료</span>
-                                        )
-                                    ) : (
-                                    <>
-                                    {/* 완료된 계획은 서버에서 연기를 막으므로 비활성화 */}
-                                    <label
-                                        className={`flex items-center gap-1 text-sm font-normal ${p.status === "DONE" ? "text-gray-300" : "text-gray-600"}`}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={false}
-                                            disabled={p.status === "DONE"}
-                                            onChange={() => handlePostponePlan(p.planId)}
-                                        />
-                                        미룸
-                                    </label>
-                                    <button
-                                        onClick={() => handleStartEdit(p)}
-                                        className="text-sm text-gray-500"
-                                    >
-                                        수정
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeletePlan(p.planId)}
-                                        className="text-sm text-red-500"
-                                    >
-                                        삭제
-                                    </button>
-                                    </>
-                                    )}
+                                    </div>
+
+                                    {/* 2줄: 시간 + 버튼 */}
+                                    <div className="flex items-center gap-3 pl-6 text-sm font-normal">
+                                        {p.estimatedMinutes != null && (
+                                            <span className="text-gray-500">{p.estimatedMinutes}분</span>
+                                        )}
+                                        {/* 집중 타이머로 기록한 실제 시간 */}
+                                        {p.actualMinutes != null && (
+                                            <span className="text-gray-400" title="집중 타이머로 기록한 시간">
+                                                실제 {p.actualMinutes}분
+                                            </span>
+                                        )}
+                                        <span className="flex-1" />
+                                        {readOnly ? (
+                                            // 지난 날짜는 결과만 표시 - 끝내 안 한 계획은 미완료
+                                            p.status !== "DONE" && <span className="text-gray-500">미완료</span>
+                                        ) : (
+                                            <>
+                                                {/* 완료된 계획은 서버에서 연기를 막으므로 비활성화 */}
+                                                <label
+                                                    className={`flex items-center gap-1 ${p.status === "DONE" ? "text-gray-300" : "text-gray-600"}`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={false}
+                                                        disabled={p.status === "DONE"}
+                                                        onChange={() => handlePostponePlan(p.planId)}
+                                                    />
+                                                    미룸
+                                                </label>
+                                                {canFocus && p.status === "TODO" && (
+                                                    <Link to={`/focus?planId=${p.planId}`} className="text-gray-500">
+                                                        집중
+                                                    </Link>
+                                                )}
+                                                <button onClick={() => handleStartEdit(p)} className="text-gray-500">
+                                                    수정
+                                                </button>
+                                                <button onClick={() => handleDeletePlan(p.planId)} className="text-red-500">
+                                                    삭제
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </>
                             )}
                         </li>

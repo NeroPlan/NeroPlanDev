@@ -24,6 +24,10 @@ public enum ErrorStatus implements BaseErrorCode {
     _INVALID_POSTPONE_DATE(HttpStatus.BAD_REQUEST, "PLAN400", "연기 날짜는 기존 수행일보다 뒤이고, 오늘보다 앞일 수 없습니다."),
     _INVALID_PLAN_DATE(HttpStatus.BAD_REQUEST, "PLAN400", "지난 날짜에는 계획을 추가할 수 없습니다."),
     _INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "PLAN400", "조회 기간이 올바르지 않습니다. 시작일은 종료일보다 늦을 수 없고, 최대 62일까지 조회할 수 있습니다."),
+    _INVALID_STATS_DAYS(HttpStatus.BAD_REQUEST, "PLAN400", "통계 기간은 1~365일 사이여야 합니다."),
+    _INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY400", "카테고리 이름은 1~50자여야 합니다."),
+    _DUPLICATED_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY400", "이미 같은 이름의 카테고리가 있습니다."),
+    _INVALID_CATEGORY_MOVE(HttpStatus.BAD_REQUEST, "CATEGORY400", "삭제할 카테고리로는 옮길 수 없습니다."),
     _ALREADY_COMPLETED_PLAN(HttpStatus.BAD_REQUEST, "PLAN400", "이미 완료된 계획은 연기할 수 없습니다."),
     _MAIL_ERROR(HttpStatus.BAD_REQUEST, "400", "인증 이메일 전송에 실패하였습니다."),
     _DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST, "400", "중복된 이메일입니다."),
@@ -52,6 +56,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // 404 Not Found
     _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 토큰을 찾을 수 없습니다."),
     _USER_NOT_FOUND(HttpStatus.NOT_FOUND, "404", "해당 유저를 찾을 수 없습니다."),
+    _CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY404", "존재하지 않는 카테고리입니다."),
     _PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAN404", "존재하지 않는 계획입니다."),
 
     // (Optional) 선택 추가 가능

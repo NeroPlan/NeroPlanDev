@@ -3,6 +3,7 @@ package com.neroplan.backendPlan.domain.plan.repository;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +16,11 @@ import java.util.stream.Collectors;
 public interface PlanDetailRepository extends JpaRepository<PlanDetail, Long> {
     List<PlanDetail> findByPlanIn(Collection<Plan> plans);
     void deleteByPlan(Plan plan);
+
+    // 회원 탈퇴 - plan보다 먼저 지워야 FK 오류가 나지 않음
+    @Modifying
+    @Query("DELETE FROM PlanDetail d WHERE d.plan.planId IN (SELECT p.planId FROM Plan p WHERE p.userId = :userId)")
+    int deleteAllByUserId(@Param("userId") Long userId);
 
     // planId -> PlanDetail
     // unique 제약 추가 전에 쌓인 중복 행이 있어도 예외 없이 가장 최근 행을 사용

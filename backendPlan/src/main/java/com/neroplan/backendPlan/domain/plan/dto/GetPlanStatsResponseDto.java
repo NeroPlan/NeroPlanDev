@@ -25,6 +25,9 @@ public class GetPlanStatsResponseDto {
 
     private PostponeStat postponeStat;
 
+    // 예상 vs 실제 - 집중 타이머 기록이 있는 완료 계획만
+    private EstimateStat estimateStat;
+
     @Getter
     @AllArgsConstructor
     public static class CategoryStat {
@@ -45,6 +48,16 @@ public class GetPlanStatsResponseDto {
         private String label;
         private Integer recordCount;
         private Double successRate;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class EstimateStat {
+        private Integer sampleCount;          // 예상 시간과 집중 기록이 모두 있는 완료 계획 수
+        private Double averageRatio;          // 실제/예상 평균 (1.4면 예상보다 1.4배 걸림), 기록이 적으면 null
+        private Double overRate;              // 예상보다 오래 걸린 비율, 기록이 적으면 null
+        private Integer averageEstimatedMinutes;
+        private Integer averageActualMinutes;
     }
 
     @Getter

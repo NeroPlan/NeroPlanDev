@@ -2,12 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 기준 글씨 크기 - 간격·크기가 대부분 rem 단위라 UI 전체가 같은 비율로 커짐
+   (예전 font 단축 속성은 정의되지 않은 var(--sans) 때문에 통째로 무시되고 있었음) */
 :root {
-  font: 18px/145% var(--sans);
+  font-size: 19.5px;
+  line-height: 1.45;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   :root {
-    font-size: 16px;
+    font-size: 17px;
   }
 }

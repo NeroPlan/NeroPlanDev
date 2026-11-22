@@ -2,6 +2,7 @@ package com.neroplan.backendPlan.domain.plan.service;
 
 import com.neroplan.backendPlan.domain.category.entity.Category;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanSummaryResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.CategoryStat;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
 import com.neroplan.backendPlan.domain.plan.entity.PlanStatus;
@@ -41,7 +42,7 @@ class PlanStatsServiceTest {
         plans.add(plan(study, 30, TODAY, PlanStatus.TODO, 0));
         when(planRepository.findByUserId(1L)).thenReturn(plans);
 
-        GetPlanStatsResponseDto stats = planStatsService.getStats(1L);
+        GetPlanStatsResponseDto stats = planStatsService.getStats(1L, null);
 
         assertThat(stats.getRecordCount()).isEqualTo(5);
         assertThat(stats.getSuccessRate()).isEqualTo(0.6);
@@ -70,7 +71,7 @@ class PlanStatsServiceTest {
         }
         when(planRepository.findByUserId(1L)).thenReturn(plans);
 
-        GetPlanStatsResponseDto stats = planStatsService.getStats(1L);
+        GetPlanStatsResponseDto stats = planStatsService.getStats(1L, null);
 
         assertThat(stats.getDurationStats()).extracting("label", "recordCount", "successRate")
                 .containsExactly(
@@ -98,11 +99,119 @@ class PlanStatsServiceTest {
         }
         when(planRepository.findByUserId(1L)).thenReturn(plans);
 
-        GetPlanStatsResponseDto.PostponeStat postponeStat = planStatsService.getStats(1L).getPostponeStat();
+        GetPlanStatsResponseDto.PostponeStat postponeStat = planStatsService.getStats(1L, null).getPostponeStat();
 
         assertThat(postponeStat.getPostponedCount()).isEqualTo(4);
         assertThat(postponeStat.getPostponedCompletionRate()).isEqualTo(0.25);
         assertThat(postponeStat.getOnTimeCompletionRate()).isEqualTo(1.0);
+    }
+
+    @Test
+    void 기간을_주면_최근_N일_수행일의_계획만_집계한다() {
+        List<Plan> plans = new ArrayList<>();
+        plans.add(plan(study, 30, TODAY.minusDays(1), PlanStatus.DONE, 0));   // 최근 7일
+        plans.add(plan(study, 30, TODAY.minusDays(6), PlanStatus.TODO, 0));   // 최근 7일 (경계)
+        plans.add(plan(study, 30, TODAY.minusDays(7), PlanStatus.DONE, 0));   // 7일 밖
+        plans.add(plan(study, 30, TODAY.minusDays(40), PlanStatus.DONE, 0));  // 30일 밖
+        when(planRepository.findByUserId(1L)).thenReturn(plans);
+
+        assertThat(planStatsService.getStats(1L, 7).getRecordCount()).isEqualTo(2);
+        assertThat(planStatsService.getStats(1L, 30).getRecordCount()).isEqualTo(3);
+        assertThat(planStatsService.getStats(1L, null).getRecordCount()).isEqualTo(4);
+    }
+
+    @Test
+    void 기간이_1에서_365일_밖이면_거절한다() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> planStatsService.getStats(1L, 0))
+                .isInstanceOf(com.neroplan.backendPlan.global.apiPayload.exception.GeneralException.class);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> planStatsService.getStats(1L, 366))
+                .isInstanceOf(com.neroplan.backendPlan.global.apiPayload.exception.GeneralException.class);
+    }
+
+    @Test
+    void 날짜별_잔디는_계획_수와_완료_수를_날짜순으로_준다() {
+        List<Plan> plans = List.of(
+                plan(study, 30, TODAY, PlanStatus.TODO, 0),
+                plan(study, 30, TODAY.minusDays(2), PlanStatus.DONE, 0),
+                plan(study, 30, TODAY.minusDays(2), PlanStatus.TODO, 0));
+        when(planRepository.findByUserIdAndPlanDateBetween(1L, TODAY.minusDays(83), TODAY)).thenReturn(plans);
+
+        assertThat(planStatsService.getDailyStats(1L, TODAY.minusDays(83), TODAY))
+                .extracting("date", "totalCount", "doneCount")
+                .containsExactly(tuple(TODAY.minusDays(2), 2, 1), tuple(TODAY, 1, 0));
+    }
+
+    @Test
+    void 연속_달성은_완료한_날이_이어진_일수이고_오늘_완료가_없으면_어제부터_센다() {
+        List<Plan> plans = new ArrayList<>();
+        plans.add(done(TODAY.minusDays(1)));
+        plans.add(done(TODAY.minusDays(2)));
+        plans.add(done(TODAY.minusDays(2)));
+        plans.add(done(TODAY.minusDays(4))); // 3일 전이 비어서 끊김
+        when(planRepository.findByUserId(1L)).thenReturn(plans);
+        assertThat(planStatsService.getSummary(1L).getStreakDays()).isEqualTo(2);
+        assertThat(planStatsService.getSummary(1L).getTotalDoneCount()).isEqualTo(4);
+
+        plans.add(done(TODAY));
+        assertThat(planStatsService.getSummary(1L).getStreakDays()).isEqualTo(3);
+    }
+
+    @Test
+    void 이번_주는_일요일부터_토요일까지_수행일_기준으로_센다() {
+        LocalDate sunday = TODAY.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY));
+        List<Plan> plans = List.of(
+                plan(study, 30, sunday, PlanStatus.DONE, 0),
+                plan(study, 30, sunday.plusDays(6), PlanStatus.TODO, 0),
+                plan(study, 30, sunday.minusDays(1), PlanStatus.DONE, 0)); // 지난주 토요일
+        when(planRepository.findByUserId(1L)).thenReturn(plans);
+
+        GetPlanSummaryResponseDto summary = planStatsService.getSummary(1L);
+        assertThat(summary.getWeekTotalCount()).isEqualTo(2);
+        assertThat(summary.getWeekDoneCount()).isEqualTo(1);
+    }
+
+    @Test
+    void 예상_vs_실제는_집중_기록이_있는_완료_계획만_비교한다() {
+        List<Plan> plans = new ArrayList<>();
+        plans.add(focused(30, 60, PlanStatus.DONE));  // 2배
+        plans.add(focused(60, 60, PlanStatus.DONE));  // 1배
+        plans.add(focused(60, 30, PlanStatus.DONE));  // 0.5배
+        plans.add(focused(30, 90, PlanStatus.TODO));  // 미완료 - 제외
+        plans.add(plan(study, 30, TODAY.minusDays(1), PlanStatus.DONE, 0)); // 집중 기록 없음 - 제외
+        when(planRepository.findByUserId(1L)).thenReturn(plans);
+
+        GetPlanStatsResponseDto.EstimateStat stat = planStatsService.getStats(1L, null).getEstimateStat();
+        assertThat(stat.getSampleCount()).isEqualTo(3);
+        assertThat(stat.getAverageRatio()).isEqualTo(1.17); // (2 + 1 + 0.5) / 3
+        assertThat(stat.getOverRate()).isEqualTo(0.333);
+        assertThat(stat.getAverageEstimatedMinutes()).isEqualTo(50);
+        assertThat(stat.getAverageActualMinutes()).isEqualTo(50);
+    }
+
+    @Test
+    void 예상_vs_실제는_기록이_3건_미만이면_비율을_주지_않는다() {
+        when(planRepository.findByUserId(1L)).thenReturn(List.of(focused(30, 45, PlanStatus.DONE)));
+
+        GetPlanStatsResponseDto.EstimateStat stat = planStatsService.getStats(1L, null).getEstimateStat();
+        assertThat(stat.getSampleCount()).isEqualTo(1);
+        assertThat(stat.getAverageRatio()).isNull();
+        assertThat(stat.getAverageActualMinutes()).isEqualTo(45);
+    }
+
+    private Plan focused(int estimated, int actual, PlanStatus status) {
+        return Plan.builder()
+                .userId(1L).content("계획").priority(1L).category(study)
+                .estimatedMinutes(estimated).actualMinutes(actual)
+                .planDate(TODAY.minusDays(1)).status(status)
+                .build();
+    }
+
+    private Plan done(LocalDate completedDate) {
+        return Plan.builder()
+                .userId(1L).content("계획").priority(1L)
+                .planDate(completedDate).status(PlanStatus.DONE)
+                .completedTime(completedDate.atTime(12, 0))
+                .build();
     }
 
     private Plan plan(Category category, int minutes, LocalDate planDate, PlanStatus status, int postponeCount) {

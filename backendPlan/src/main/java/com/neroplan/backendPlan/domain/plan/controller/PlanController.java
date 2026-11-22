@@ -1,10 +1,13 @@
 package com.neroplan.backendPlan.domain.plan.controller;
 
 import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.FocusPlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetDailyStatResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanSummaryResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.service.PlanService;
@@ -63,10 +66,34 @@ public class PlanController {
         return ApiResponse.onSuccess(planService.analyzeTodayPlans(userId));
     }
 
-    // 9. 분석 페이지 통계 - 카테고리별 성공률과 수행 패턴
+    // 9. 분석 페이지 통계 - 카테고리별 성공률과 수행 패턴, days(최근 N일)가 없으면 전체 기간
     @GetMapping("/stats")
-    public ApiResponse<GetPlanStatsResponseDto> getPlanStats(@AuthenticationPrincipal Long userId) {
-        return ApiResponse.onSuccess(planStatsService.getStats(userId));
+    public ApiResponse<GetPlanStatsResponseDto> getPlanStats(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) Integer days) {
+        return ApiResponse.onSuccess(planStatsService.getStats(userId, days));
+    }
+
+    // 10. 완료 잔디 - from~to(최대 120일) 날짜별 계획 수/완료 수
+    @GetMapping("/stats/daily")
+    public ApiResponse<List<GetDailyStatResponseDto>> getDailyStats(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ApiResponse.onSuccess(planStatsService.getDailyStats(userId, from, to));
+    }
+
+    // 11. 마이페이지 요약 - 연속 달성 일수, 이번 주 달성, 총 완료 수
+    @GetMapping("/stats/summary")
+    public ApiResponse<GetPlanSummaryResponseDto> getPlanSummary(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(planStatsService.getSummary(userId));
+    }
+
+    // 12. 회원 탈퇴 시 계획 데이터 전체 삭제 - 프론트가 backendUser 탈퇴 전에 호출
+    @DeleteMapping("/me")
+    public ApiResponse<String> deleteMyData(@AuthenticationPrincipal Long userId) {
+        planService.deleteAllData(userId);
+        return ApiResponse.onSuccess("계획 데이터를 모두 삭제했습니다.");
     }
 
     // 4. 플랜 수정
@@ -85,6 +112,15 @@ public class PlanController {
             @PathVariable Long planId,
             @Valid @RequestBody CompletePlanRequestDto requestDto) {
         return ApiResponse.onSuccess(planService.completePlan(userId, planId, requestDto));
+    }
+
+    // 13. 집중 타이머 기록 - 집중한 시간을 누적하고, complete가 true면 완료 처리
+    @PostMapping("/{planId}/focus")
+    public ApiResponse<GetPlanResponseDto> recordFocus(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long planId,
+            @Valid @RequestBody FocusPlanRequestDto requestDto) {
+        return ApiResponse.onSuccess(planService.recordFocus(userId, planId, requestDto));
     }
 
     // 7. 플랜 연기 - body 없이 호출하면 다음 날로 연기

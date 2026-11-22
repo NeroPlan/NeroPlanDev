@@ -4,9 +4,12 @@ import com.neroplan.backendUser.dto.UpdateNicknameRequestDto;
 import com.neroplan.backendUser.dto.UserResponseDto;
 import com.neroplan.backendUser.entity.UserProfileImage;
 import com.neroplan.backendUser.global.apiPayload.ApiResponse;
+import com.neroplan.backendUser.security.RefreshTokenCookie;
 import com.neroplan.backendUser.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +24,7 @@ import java.time.Duration;
 public class UserController {
 
     private final UserService userService;
+    private final RefreshTokenCookie refreshTokenCookie;
 
     // 내 정보 조회
     @GetMapping("/me")
@@ -35,6 +39,14 @@ public class UserController {
             @RequestBody UpdateNicknameRequestDto requestDto
     ) {
         return ApiResponse.onSuccess(userService.updateNickname(userId, requestDto.getNickname()));
+    }
+
+    // 회원 탈퇴 - 계정 삭제 후 refresh token 쿠키도 만료
+    @DeleteMapping("/me")
+    public ApiResponse<String> withdraw(@AuthenticationPrincipal Long userId, HttpServletResponse response) {
+        userService.withdraw(userId);
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.expire().toString());
+        return ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다.");
     }
 
     // 프로필 사진 변경 - multipart의 image 필드

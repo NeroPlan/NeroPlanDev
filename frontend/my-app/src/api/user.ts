@@ -28,6 +28,11 @@ export const uploadProfileImage = async (image: Blob): Promise<UserProfile> => {
     return response.data.result;
 };
 
+// 회원 탈퇴 - 서버가 계정을 지우고 refresh token 쿠키도 만료시킴
+export const withdraw = async (): Promise<void> => {
+    await api.delete("/api/v1/users/me", { withCredentials: true });
+};
+
 // 직접 올린 사진은 /api/... 상대 주소로 오므로 API 서버 주소를 붙임
 export const toProfileImageUrl = (profileImage: string | null) => {
     if (!profileImage) return "";
