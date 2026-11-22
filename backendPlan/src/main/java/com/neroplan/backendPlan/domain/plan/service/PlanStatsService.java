@@ -4,6 +4,7 @@ import com.neroplan.backendPlan.domain.plan.dto.GetDailyStatResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanSummaryResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.CategoryStat;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.EstimateStat;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.PostponeStat;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.RateStat;
 import com.neroplan.backendPlan.domain.plan.entity.Plan;
@@ -74,7 +75,31 @@ public class PlanStatsService {
                 toCategoryStats(outcomes),
                 toDurationStats(outcomes),
                 toDailyLoadStats(userPlans, outcomes, today),
-                toPostponeStat(outcomes));
+                toPostponeStat(outcomes),
+                toEstimateStat(userPlans));
+    }
+
+    // 예상 vs 실제 - 결과 판정(PlanOutcome)과 무관하게, 완료했고 예상 시간과 집중 기록이 모두 있는 계획
+    private EstimateStat toEstimateStat(List<Plan> plans) {
+        List<Plan> samples = plans.stream()
+                .filter(plan -> plan.getStatus() == PlanStatus.DONE)
+                .filter(plan -> plan.getEstimatedMinutes() != null && plan.getEstimatedMinutes() > 0)
+                .filter(plan -> plan.getActualMinutes() != null && plan.getActualMinutes() > 0)
+                .toList();
+        if (samples.isEmpty()) {
+            return new EstimateStat(0, null, null, null, null);
+        }
+        boolean enough = samples.size() >= MIN_RECORDS_FOR_RATE;
+        double ratio = samples.stream()
+                .mapToDouble(plan -> (double) plan.getActualMinutes() / plan.getEstimatedMinutes())
+                .average().orElse(0);
+        long over = samples.stream().filter(plan -> plan.getActualMinutes() > plan.getEstimatedMinutes()).count();
+        return new EstimateStat(
+                samples.size(),
+                enough ? Math.round(ratio * 100) / 100.0 : null,
+                enough ? round((double) over / samples.size()) : null,
+                (int) Math.round(samples.stream().mapToInt(Plan::getEstimatedMinutes).average().orElse(0)),
+                (int) Math.round(samples.stream().mapToInt(Plan::getActualMinutes).average().orElse(0)));
     }
 
     // 완료 잔디 - from~to 기간의 날짜별 계획 수/완료 수 (계획이 없는 날은 제외)

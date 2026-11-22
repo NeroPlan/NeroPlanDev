@@ -1,6 +1,7 @@
 package com.neroplan.backendPlan.domain.plan.controller;
 
 import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.FocusPlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.CreatePlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
@@ -111,6 +112,15 @@ public class PlanController {
             @PathVariable Long planId,
             @Valid @RequestBody CompletePlanRequestDto requestDto) {
         return ApiResponse.onSuccess(planService.completePlan(userId, planId, requestDto));
+    }
+
+    // 13. 집중 타이머 기록 - 집중한 시간을 누적하고, complete가 true면 완료 처리
+    @PostMapping("/{planId}/focus")
+    public ApiResponse<GetPlanResponseDto> recordFocus(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long planId,
+            @Valid @RequestBody FocusPlanRequestDto requestDto) {
+        return ApiResponse.onSuccess(planService.recordFocus(userId, planId, requestDto));
     }
 
     // 7. 플랜 연기 - body 없이 호출하면 다음 날로 연기

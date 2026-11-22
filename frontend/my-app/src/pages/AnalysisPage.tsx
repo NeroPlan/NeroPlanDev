@@ -10,6 +10,7 @@ import CategoryStats from "../components/AnalysisPage/CategoryStats";
 import RateStats from "../components/AnalysisPage/RateStats";
 import PostponeStats from "../components/AnalysisPage/PostponeStats";
 import CompletionHeatmap from "../components/AnalysisPage/CompletionHeatmap";
+import EstimateStats from "../components/AnalysisPage/EstimateStats";
 
 // 통계 기간 - days가 없으면 전체
 const PERIODS = [
@@ -101,6 +102,8 @@ function PeriodStats({ stats, period }: { stats: PlanStats; period: PeriodLabel 
                             `하루에 ${best.label} 세운 날 성공률이 ${toPercent(best.successRate ?? 0)}로 가장 높아요. ${worst.label} 세운 날은 ${toPercent(worst.successRate ?? 0)}예요.`
                         }
                     />
+
+                    <EstimateStats stat={stats.estimateStat} />
 
                     <PostponeStats
                         stat={stats.postponeStat}

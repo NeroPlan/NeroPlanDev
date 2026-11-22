@@ -170,6 +170,42 @@ class PlanStatsServiceTest {
         assertThat(summary.getWeekDoneCount()).isEqualTo(1);
     }
 
+    @Test
+    void 예상_vs_실제는_집중_기록이_있는_완료_계획만_비교한다() {
+        List<Plan> plans = new ArrayList<>();
+        plans.add(focused(30, 60, PlanStatus.DONE));  // 2배
+        plans.add(focused(60, 60, PlanStatus.DONE));  // 1배
+        plans.add(focused(60, 30, PlanStatus.DONE));  // 0.5배
+        plans.add(focused(30, 90, PlanStatus.TODO));  // 미완료 - 제외
+        plans.add(plan(study, 30, TODAY.minusDays(1), PlanStatus.DONE, 0)); // 집중 기록 없음 - 제외
+        when(planRepository.findByUserId(1L)).thenReturn(plans);
+
+        GetPlanStatsResponseDto.EstimateStat stat = planStatsService.getStats(1L, null).getEstimateStat();
+        assertThat(stat.getSampleCount()).isEqualTo(3);
+        assertThat(stat.getAverageRatio()).isEqualTo(1.17); // (2 + 1 + 0.5) / 3
+        assertThat(stat.getOverRate()).isEqualTo(0.333);
+        assertThat(stat.getAverageEstimatedMinutes()).isEqualTo(50);
+        assertThat(stat.getAverageActualMinutes()).isEqualTo(50);
+    }
+
+    @Test
+    void 예상_vs_실제는_기록이_3건_미만이면_비율을_주지_않는다() {
+        when(planRepository.findByUserId(1L)).thenReturn(List.of(focused(30, 45, PlanStatus.DONE)));
+
+        GetPlanStatsResponseDto.EstimateStat stat = planStatsService.getStats(1L, null).getEstimateStat();
+        assertThat(stat.getSampleCount()).isEqualTo(1);
+        assertThat(stat.getAverageRatio()).isNull();
+        assertThat(stat.getAverageActualMinutes()).isEqualTo(45);
+    }
+
+    private Plan focused(int estimated, int actual, PlanStatus status) {
+        return Plan.builder()
+                .userId(1L).content("계획").priority(1L).category(study)
+                .estimatedMinutes(estimated).actualMinutes(actual)
+                .planDate(TODAY.minusDays(1)).status(status)
+                .build();
+    }
+
     private Plan done(LocalDate completedDate) {
         return Plan.builder()
                 .userId(1L).content("계획").priority(1L)

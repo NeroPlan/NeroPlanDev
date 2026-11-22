@@ -14,6 +14,7 @@ import AnalysisPage from "../pages/AnalysisPage";
 import OnboardingPage from "../pages/OnboardingPage";
 import ProfileEditPage from "../pages/ProfileEditPage";
 import CategoryPage from "../pages/CategoryPage";
+import FocusPage from "../pages/FocusPage";
 
 const router = createBrowserRouter([
     {
@@ -32,6 +33,16 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <PlanPage />,
+            },
+        ],
+    },
+    {
+        path: "/focus",
+        element: <MainLayout />,
+        children: [
+            {
+                index: true,
+                element: <FocusPage />,
             },
         ],
     },

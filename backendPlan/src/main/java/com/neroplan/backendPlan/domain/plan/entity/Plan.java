@@ -30,6 +30,9 @@ public class Plan {
     // 예상 소요 시간(분) - AI 위험도 판정에 사용
     private Integer estimatedMinutes;
 
+    // 집중 타이머로 실제로 집중한 시간(분) - 여러 번 나눠 집중하면 누적, 타이머를 안 썼으면 null
+    private Integer actualMinutes;
+
     @Builder.Default
     private LocalDateTime createdTime = LocalDateTime.now();
 
@@ -76,6 +79,10 @@ public class Plan {
     public void postpone(LocalDate toDate) {
         this.planDate = toDate;
         this.postponeCount++;
+    }
+
+    public void addFocusMinutes(int minutes) {
+        this.actualMinutes = (this.actualMinutes != null ? this.actualMinutes : 0) + minutes;
     }
 
     public void complete() {

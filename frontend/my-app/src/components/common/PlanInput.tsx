@@ -1,5 +1,6 @@
 // components/common/PlanInput.tsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { completePlan, createPlan, deletePlan, postponePlan, updatePlan } from "../../api/plan";
 import type { Plan } from "../../api/plan";
 import { getErrorMessage } from "../../api/api";
@@ -9,6 +10,7 @@ interface PlanInputProps {
     planDate: string; // 이 카드가 보여주는 날짜(YYYY-MM-DD) - 새 계획도 이 날짜로 생성
     plans: Plan[]; // 그 날짜의 계획 - 목록은 PlanPage가 달력 기간 단위로 불러옴
     readOnly: boolean; // 지난 날짜는 결과만 조회
+    canFocus?: boolean; // 오늘 계획이면 집중 타이머로 바로 이동 가능
     onUpsert: (plan: Plan) => void; // 추가·수정·완료·연기 결과 반영 (연기는 planDate가 바뀐 계획)
     onRemove: (planId: number) => void;
 }
@@ -18,6 +20,7 @@ export default function PlanInput({
     planDate,
     plans,
     readOnly,
+    canFocus = false,
     onUpsert,
     onRemove,
 }: PlanInputProps) {
@@ -261,6 +264,12 @@ export default function PlanInput({
                                             {p.estimatedMinutes}분
                                         </span>
                                     )}
+                                    {/* 집중 타이머로 기록한 실제 시간 */}
+                                    {p.actualMinutes != null && (
+                                        <span className="text-sm text-gray-400 font-normal" title="집중 타이머로 기록한 시간">
+                                            (실제 {p.actualMinutes}분)
+                                        </span>
+                                    )}
                                     {readOnly ? (
                                         // 지난 날짜는 결과만 표시 - 끝내 안 한 계획은 미완료
                                         p.status !== "DONE" && (
@@ -280,6 +289,14 @@ export default function PlanInput({
                                         />
                                         미룸
                                     </label>
+                                    {canFocus && p.status === "TODO" && (
+                                        <Link
+                                            to={`/focus?planId=${p.planId}`}
+                                            className="text-sm text-gray-500"
+                                        >
+                                            집중
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={() => handleStartEdit(p)}
                                         className="text-sm text-gray-500"

@@ -25,6 +25,7 @@ public class GetPlanResponseDto {
     private Long categoryId;
     private String categoryName;
     private Integer estimatedMinutes;
+    private Integer actualMinutes; // 집중 타이머로 기록한 시간(분), 없으면 null
     private LocalDate planDate;
     private Integer postponeCount;
     private PlanStatus status;
@@ -55,6 +56,7 @@ public class GetPlanResponseDto {
                 .categoryId(plan.getCategory() != null ? plan.getCategory().getCategoryId() : null)
                 .categoryName(plan.getCategory() != null ? plan.getCategory().getName() : null)
                 .estimatedMinutes(plan.getEstimatedMinutes())
+                .actualMinutes(plan.getActualMinutes())
                 .planDate(plan.getPlanDate())
                 .postponeCount(plan.getPostponeCount())
                 .status(plan.getStatus())

@@ -14,6 +14,7 @@ export interface Plan {
     categoryId: number | null;
     categoryName: string | null;
     estimatedMinutes: number | null;
+    actualMinutes: number | null; // 집중 타이머로 기록한 시간(분) - 여러 번 기록하면 누적
     planDate: string; // 수행 예정일 (YYYY-MM-DD)
     postponeCount: number;
     status: PlanStatus;
@@ -41,6 +42,14 @@ export interface CategoryStat {
     aiRecordCount: number; // AI가 쓰는 기록 수(소요시간이 있는 기록) - 10건부터 성공률 예측
 }
 
+export interface EstimateStat {
+    sampleCount: number;
+    averageRatio: number | null; // 실제/예상 평균 - 1.4면 예상보다 1.4배 걸림, 3건 미만이면 null
+    overRate: number | null; // 예상보다 오래 걸린 비율(0~1)
+    averageEstimatedMinutes: number | null;
+    averageActualMinutes: number | null;
+}
+
 export interface RateStat {
     label: string;
     recordCount: number;
@@ -53,6 +62,7 @@ export interface PlanStats {
     categories: CategoryStat[]; // 기록 많은 순
     durationStats: RateStat[]; // 예상 소요시간 구간별
     dailyLoadStats: RateStat[]; // 하루에 세운 계획 수 구간별
+    estimateStat: EstimateStat; // 예상 vs 실제 - 집중 기록이 있는 완료 계획만
     postponeStat: {
         postponedCount: number;
         postponedCompletionRate: number | null; // 미룬 계획 중 결국 완료한 비율
@@ -150,6 +160,16 @@ export const completePlan = async (
     completed: boolean
 ): Promise<Plan> => {
     const response = await api.patch(`/api/v1/plans/${planId}/complete`, { completed });
+    return response.data.result;
+};
+
+// 집중 타이머 기록 - minutes를 기존 기록에 더하고, complete면 완료 처리
+export const recordFocus = async (
+    planId: number,
+    minutes: number,
+    complete: boolean
+): Promise<Plan> => {
+    const response = await api.post(`/api/v1/plans/${planId}/focus`, { minutes, complete });
     return response.data.result;
 };
 

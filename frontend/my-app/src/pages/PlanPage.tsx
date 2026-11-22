@@ -147,6 +147,7 @@ export default function PlanPage() {
                     planDate={selectedKey}
                     plans={plansByDate[selectedKey] ?? []}
                     readOnly={selectedKey < todayKey}
+                    canFocus={isToday}
                     onUpsert={handleUpsert}
                     onRemove={handleRemove}
                 />

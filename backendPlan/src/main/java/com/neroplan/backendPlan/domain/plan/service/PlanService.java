@@ -2,6 +2,7 @@ package com.neroplan.backendPlan.domain.plan.service;
 
 import com.neroplan.backendPlan.domain.category.service.CategoryService;
 import com.neroplan.backendPlan.domain.plan.dto.CompletePlanRequestDto;
+import com.neroplan.backendPlan.domain.plan.dto.FocusPlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.PostponePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
@@ -216,6 +217,19 @@ public class PlanService {
             plan.cancelComplete();
         }
         eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
+        return GetPlanResponseDto.from(plan);
+    }
+
+    // 13. 집중 기록 - 타이머로 집중한 시간을 누적하고, complete면 완료 처리
+    @Transactional
+    public GetPlanResponseDto recordFocus(Long userId, Long planId, FocusPlanRequestDto requestDto) {
+        Plan plan = planRepository.findByPlanIdAndUserId(planId, userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._PLAN_NOT_FOUND));
+        plan.addFocusMinutes(requestDto.getMinutes());
+        if (requestDto.isComplete() && plan.getStatus() != PlanStatus.DONE) {
+            plan.complete();
+            eventPublisher.publishEvent(new PlanChangedEvent(userId, plan.getPlanDate()));
+        }
         return GetPlanResponseDto.from(plan);
     }
 
