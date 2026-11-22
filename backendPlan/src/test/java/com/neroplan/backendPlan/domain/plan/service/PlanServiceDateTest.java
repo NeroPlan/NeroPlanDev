@@ -36,6 +36,7 @@ class PlanServiceDateTest {
             planRepository,
             planDetailRepository,
             mock(CategoryService.class),
+            mock(com.neroplan.backendPlan.domain.category.repository.CategoryRepository.class),
             mock(AiClient.class),
             mock(PlanScheduleService.class),
             mock(ApplicationEventPublisher.class),

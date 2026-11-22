@@ -13,11 +13,17 @@ public class GetCategoryResponseDto {
 
     private Long categoryId;
     private String name;
+    private Long planCount; // 이 카테고리로 분류된 계획 수 (카테고리 관리 화면)
 
     public static GetCategoryResponseDto from(Category category) {
+        return from(category, 0L);
+    }
+
+    public static GetCategoryResponseDto from(Category category, Long planCount) {
         return GetCategoryResponseDto.builder()
                 .categoryId(category.getCategoryId())
                 .name(category.getName())
+                .planCount(planCount)
                 .build();
     }
 }

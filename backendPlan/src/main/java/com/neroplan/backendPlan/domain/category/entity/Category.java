@@ -25,4 +25,8 @@ public class Category {
 
     @Builder.Default
     private LocalDateTime createdTime = LocalDateTime.now();
+
+    public void rename(String name) {
+        this.name = name;
+    }
 }

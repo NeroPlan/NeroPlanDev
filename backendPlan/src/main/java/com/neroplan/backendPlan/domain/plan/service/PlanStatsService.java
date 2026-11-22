@@ -1,6 +1,8 @@
 package com.neroplan.backendPlan.domain.plan.service;
 
+import com.neroplan.backendPlan.domain.plan.dto.GetDailyStatResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanSummaryResponseDto;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.CategoryStat;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.PostponeStat;
 import com.neroplan.backendPlan.domain.plan.dto.GetPlanStatsResponseDto.RateStat;
@@ -14,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +26,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,15 +39,26 @@ public class PlanStatsService {
     // 기록이 이보다 적으면 성공률을 보여주지 않음 - aiService의 MIN_RECORDS_FOR_RATE와 같은 값
     private static final int MIN_RECORDS_FOR_RATE = 3;
 
+    private static final int MAX_STATS_DAYS = 365;
+    // 완료 잔디 한 번 조회의 최대 기간 - 화면은 12주(84일)
+    private static final int MAX_DAILY_RANGE_DAYS = 120;
+
     private final PlanRepository planRepository;
 
+    // days가 있으면 최근 days일(오늘 포함) 수행일의 계획만 집계, 없으면 전체
     @Transactional(readOnly = true)
-    public GetPlanStatsResponseDto getStats(Long userId) {
+    public GetPlanStatsResponseDto getStats(Long userId, Integer days) {
         if (userId == null) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
+        if (days != null && (days < 1 || days > MAX_STATS_DAYS)) {
+            throw new GeneralException(ErrorStatus._INVALID_STATS_DAYS);
+        }
         LocalDate today = LocalDate.now();
-        List<Plan> userPlans = planRepository.findByUserId(userId);
+        LocalDate since = days != null ? today.minusDays(days - 1L) : null;
+        List<Plan> userPlans = planRepository.findByUserId(userId).stream()
+                .filter(plan -> since == null || !plan.getPlanDate().isBefore(since))
+                .toList();
 
         Map<Plan, PlanOutcome> outcomes = new LinkedHashMap<>();
         userPlans.forEach(plan -> {
@@ -58,6 +75,62 @@ public class PlanStatsService {
                 toDurationStats(outcomes),
                 toDailyLoadStats(userPlans, outcomes, today),
                 toPostponeStat(outcomes));
+    }
+
+    // 완료 잔디 - from~to 기간의 날짜별 계획 수/완료 수 (계획이 없는 날은 제외)
+    @Transactional(readOnly = true)
+    public List<GetDailyStatResponseDto> getDailyStats(Long userId, LocalDate from, LocalDate to) {
+        if (userId == null) {
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        if (from.isAfter(to) || from.plusDays(MAX_DAILY_RANGE_DAYS).isBefore(to)) {
+            throw new GeneralException(ErrorStatus._INVALID_DATE_RANGE);
+        }
+        return planRepository.findByUserIdAndPlanDateBetween(userId, from, to).stream()
+                .collect(Collectors.groupingBy(Plan::getPlanDate))
+                .entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new GetDailyStatResponseDto(
+                        entry.getKey(),
+                        entry.getValue().size(),
+                        (int) entry.getValue().stream().filter(plan -> plan.getStatus() == PlanStatus.DONE).count()))
+                .toList();
+    }
+
+    // 마이페이지 요약 카드
+    @Transactional(readOnly = true)
+    public GetPlanSummaryResponseDto getSummary(Long userId) {
+        if (userId == null) {
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+        LocalDate today = LocalDate.now();
+        List<Plan> userPlans = planRepository.findByUserId(userId);
+        List<Plan> donePlans = userPlans.stream().filter(plan -> plan.getStatus() == PlanStatus.DONE).toList();
+
+        // 연속 달성은 실제로 완료한 날(completedTime) 기준 - 미래 계획을 미리 끝내도 그날 달성으로 셈
+        Set<LocalDate> doneDays = donePlans.stream()
+                .map(Plan::getCompletedTime)
+                .filter(Objects::nonNull)
+                .map(time -> time.toLocalDate())
+                .collect(Collectors.toSet());
+        LocalDate day = doneDays.contains(today) ? today : today.minusDays(1);
+        int streak = 0;
+        while (doneDays.contains(day)) {
+            streak++;
+            day = day.minusDays(1);
+        }
+
+        LocalDate weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDate weekEnd = weekStart.plusDays(6);
+        List<Plan> weekPlans = userPlans.stream()
+                .filter(plan -> !plan.getPlanDate().isBefore(weekStart) && !plan.getPlanDate().isAfter(weekEnd))
+                .toList();
+
+        return new GetPlanSummaryResponseDto(
+                streak,
+                weekPlans.size(),
+                (int) weekPlans.stream().filter(plan -> plan.getStatus() == PlanStatus.DONE).count(),
+                donePlans.size());
     }
 
     private List<CategoryStat> toCategoryStats(Map<Plan, PlanOutcome> outcomes) {
