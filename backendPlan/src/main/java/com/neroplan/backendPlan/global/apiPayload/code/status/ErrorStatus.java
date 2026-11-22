@@ -22,6 +22,8 @@ public enum ErrorStatus implements BaseErrorCode {
     // 400 Bad Request
     _BAD_REQUEST(HttpStatus.BAD_REQUEST, "400", "잘못된 요청입니다."),
     _INVALID_POSTPONE_DATE(HttpStatus.BAD_REQUEST, "PLAN400", "연기 날짜는 기존 수행일보다 뒤이고, 오늘보다 앞일 수 없습니다."),
+    _INVALID_PLAN_DATE(HttpStatus.BAD_REQUEST, "PLAN400", "지난 날짜에는 계획을 추가할 수 없습니다."),
+    _INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "PLAN400", "조회 기간이 올바르지 않습니다. 시작일은 종료일보다 늦을 수 없고, 최대 62일까지 조회할 수 있습니다."),
     _ALREADY_COMPLETED_PLAN(HttpStatus.BAD_REQUEST, "PLAN400", "이미 완료된 계획은 연기할 수 없습니다."),
     _MAIL_ERROR(HttpStatus.BAD_REQUEST, "400", "인증 이메일 전송에 실패하였습니다."),
     _DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST, "400", "중복된 이메일입니다."),

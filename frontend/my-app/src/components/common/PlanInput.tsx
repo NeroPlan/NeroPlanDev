@@ -1,26 +1,32 @@
 // components/common/PlanInput.tsx
-import { useEffect, useState } from "react";
-import { completePlan, createPlan, deletePlan, getPlans, postponePlan, updatePlan } from "../../api/plan"; // 실제 위치에 맞게 경로 수정
+import { useState } from "react";
+import { completePlan, createPlan, deletePlan, postponePlan, updatePlan } from "../../api/plan";
 import type { Plan } from "../../api/plan";
 import { getErrorMessage } from "../../api/api";
 
-export default function PlanInput() {
+interface PlanInputProps {
+    title: string;
+    planDate: string; // 이 카드가 보여주는 날짜(YYYY-MM-DD) - 새 계획도 이 날짜로 생성
+    plans: Plan[]; // 그 날짜의 계획 - 목록은 PlanPage가 달력 기간 단위로 불러옴
+    readOnly: boolean; // 지난 날짜는 결과만 조회
+    onUpsert: (plan: Plan) => void; // 추가·수정·완료·연기 결과 반영 (연기는 planDate가 바뀐 계획)
+    onRemove: (planId: number) => void;
+}
+
+export default function PlanInput({
+    title,
+    planDate,
+    plans,
+    readOnly,
+    onUpsert,
+    onRemove,
+}: PlanInputProps) {
     const [plan, setPlan] = useState("");
     const [minutes, setMinutes] = useState(""); // 예상 소요 시간(분) - AI 재배열에 필요해서 필수
-    const [plans, setPlans] = useState<Plan[]>([]); // 서버에 저장된 계획 목록
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingContent, setEditingContent] = useState("");
     const [editingMinutes, setEditingMinutes] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-
-    useEffect(() => {
-        getPlans()
-            .then(setPlans)
-            .catch((error) => {
-                console.error("계획 목록을 불러오지 못했습니다:", error);
-                setErrorMessage(getErrorMessage(error, "계획 목록을 불러오지 못했습니다."));
-            });
-    }, []);
 
     // 1 이상의 정수만 허용, 아니면 null
     const parseMinutes = (value: string) => {
@@ -40,9 +46,9 @@ export default function PlanInput() {
         }
 
         try {
-            const createdPlan = await createPlan(plan, estimatedMinutes);
+            const createdPlan = await createPlan(plan, estimatedMinutes, planDate);
 
-            setPlans((prev) => [...prev, createdPlan]); // 서버가 준 결과를 목록에 추가
+            onUpsert(createdPlan); // 서버가 준 결과를 목록에 추가
             setPlan(""); // 입력창 초기화
             setMinutes("");
             setErrorMessage("");
@@ -81,9 +87,7 @@ export default function PlanInput() {
                 estimatedMinutes,
             });
 
-            setPlans((prev) =>
-                prev.map((p) => (p.planId === planId ? updated : p))
-            );
+            onUpsert(updated);
             handleCancelEdit();
             setErrorMessage("");
         } catch (error) {
@@ -96,9 +100,7 @@ export default function PlanInput() {
         try {
             const updated = await completePlan(planId, completed);
 
-            setPlans((prev) =>
-                prev.map((p) => (p.planId === planId ? updated : p))
-            );
+            onUpsert(updated);
             setErrorMessage("");
         } catch (error) {
             console.error("완료 상태를 바꾸지 못했습니다:", error);
@@ -106,12 +108,12 @@ export default function PlanInput() {
         }
     };
 
-    // 다음 날로 연기 - 오늘 목록에서는 빠짐
+    // 다음 날로 연기 - 이 날짜 목록에서 빠지고 달력의 다음 날 칸으로 옮겨감
     const handlePostponePlan = async (planId: number) => {
         try {
-            await postponePlan(planId);
+            const postponed = await postponePlan(planId);
 
-            setPlans((prev) => prev.filter((p) => p.planId !== planId));
+            onUpsert(postponed);
             if (editingId === planId) handleCancelEdit();
             setErrorMessage("");
         } catch (error) {
@@ -124,7 +126,7 @@ export default function PlanInput() {
         try {
             await deletePlan(planId);
 
-            setPlans((prev) => prev.filter((p) => p.planId !== planId));
+            onRemove(planId);
             if (editingId === planId) handleCancelEdit();
             setErrorMessage("");
         } catch (error) {
@@ -136,12 +138,14 @@ export default function PlanInput() {
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-center mb-3">
-                계획 입력 란
+                {title}
             </h2>
 
             <hr className="mb-4" />
 
            <div className="space-y-3">
+                {!readOnly && (
+                <>
                 <div className="flex items-center gap-2">
                     <input
                         type="text"
@@ -190,9 +194,17 @@ export default function PlanInput() {
                 >
                     +
                 </button>
+                </>
+                )}
 
                 {errorMessage && (
                     <p className="text-sm text-red-500">{errorMessage}</p>
+                )}
+
+                {plans.length === 0 && (
+                    <p className="text-center text-gray-500">
+                        {readOnly ? "이 날은 계획이 없었어요." : "아직 계획이 없어요."}
+                    </p>
                 )}
 
                 <ul className="list-disc pl-6 space-y-1 text-lg font-semibold">
@@ -234,6 +246,7 @@ export default function PlanInput() {
                                         <input
                                             type="checkbox"
                                             checked={p.status === "DONE"}
+                                            disabled={readOnly}
                                             onChange={(e) => handleToggleComplete(p.planId, e.target.checked)}
                                         />
                                         완료
@@ -248,6 +261,13 @@ export default function PlanInput() {
                                             {p.estimatedMinutes}분
                                         </span>
                                     )}
+                                    {readOnly ? (
+                                        // 지난 날짜는 결과만 표시 - 끝내 안 한 계획은 미완료
+                                        p.status !== "DONE" && (
+                                            <span className="text-sm text-gray-500 font-normal">미완료</span>
+                                        )
+                                    ) : (
+                                    <>
                                     {/* 완료된 계획은 서버에서 연기를 막으므로 비활성화 */}
                                     <label
                                         className={`flex items-center gap-1 text-sm font-normal ${p.status === "DONE" ? "text-gray-300" : "text-gray-600"}`}
@@ -272,6 +292,8 @@ export default function PlanInput() {
                                     >
                                         삭제
                                     </button>
+                                    </>
+                                    )}
                                 </>
                             )}
                         </li>

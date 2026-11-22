@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getErrorMessage } from "../api/api";
+import { getErrorMessage, logout } from "../api/api";
 import { getMyProfile, toProfileImageUrl } from "../api/user";
 import type { UserProfile } from "../api/user";
 import MyPageMenu from "../components/common/MyPageMenu";
@@ -21,13 +21,13 @@ export default function MyPage() {
       });
   }, []);
 
-const handleLogout = () => {
+const handleLogout = async () => {
   const confirmed = window.confirm("로그아웃 하시겠습니까?");
 
   if (!confirmed) return;
 
-  // 저장된 로그인 토큰 삭제
-  localStorage.removeItem("accessToken");
+  // 서버에 refresh token 쿠키 삭제를 요청하고 메모리의 토큰도 삭제
+  await logout().catch((error) => console.error("로그아웃 요청 실패:", error));
 
   // 로그인 페이지로 이동
   navigate("/");

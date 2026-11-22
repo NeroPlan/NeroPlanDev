@@ -46,7 +46,12 @@ public class PlanScheduleService {
     }
 
     // 재배열 결과를 저장했거나 재배열할 계획이 없으면 true, aiService 호출에 실패하면 false
+    // 락이 트랜잭션 단위라 트랜잭션 안에서 실행되어야 함 (호출하는 쪽에 트랜잭션이 있으면 참여)
+    @Transactional
     public boolean recalculate(Long userId, LocalDate planDate) {
+        // 다른 재계산이 끝날(커밋될) 때까지 기다린 뒤 최신 상태를 읽음
+        planDetailRepository.lockScheduleByUserId(userId);
+
         LocalDate today = LocalDate.now();
         List<Plan> userPlans = planRepository.findByUserId(userId);
 
@@ -59,8 +64,7 @@ public class PlanScheduleService {
                 .filter(plan -> plan.getCategory() != null && plan.getEstimatedMinutes() != null)
                 .toList();
 
-        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findByPlanIn(sameDatePlans).stream()
-                .collect(Collectors.toMap(detail -> detail.getPlan().getPlanId(), Function.identity()));
+        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findMapByPlanIn(sameDatePlans);
 
         if (pendingPlans.isEmpty()) {
             detailsByPlanId.values().forEach(PlanDetail::clearRecommendedOrder);

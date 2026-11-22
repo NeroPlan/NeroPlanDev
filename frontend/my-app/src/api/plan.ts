@@ -65,16 +65,19 @@ export interface Category {
     name: string;
 }
 
+// planDate(YYYY-MM-DD)가 없으면 오늘 계획으로 생성 - 지난 날짜는 서버가 거절
 export const createPlan = async (
     content: string,
-    estimatedMinutes?: number
+    estimatedMinutes?: number,
+    planDate?: string
 ): Promise<Plan> => {
     const response = await api.post(
         "/api/v1/plans",
         {
             content,
             priority: 1,
-            estimatedMinutes
+            estimatedMinutes,
+            planDate
         }
     );
 
@@ -83,6 +86,13 @@ export const createPlan = async (
 
 export const getPlans = async (): Promise<Plan[]> => {
     const response = await api.get("/api/v1/plans");
+
+    return response.data.result;
+};
+
+// 달력 조회 - from~to(YYYY-MM-DD, 양 끝 포함, 최대 62일) 기간의 계획을 날짜순으로 반환
+export const getPlansInRange = async (from: string, to: string): Promise<Plan[]> => {
+    const response = await api.get("/api/v1/plans", { params: { from, to } });
 
     return response.data.result;
 };

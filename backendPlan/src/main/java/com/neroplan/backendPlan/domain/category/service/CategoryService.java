@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -40,10 +41,11 @@ public class CategoryService {
         }
         String trimmedName = name.trim();
         return categoryRepository.findByUserIdAndName(userId, trimmedName)
-                .orElseGet(() -> categoryRepository.save(
-                        Category.builder()
-                                .userId(userId)
-                                .name(trimmedName)
-                                .build()));
+                .orElseGet(() -> {
+                    // 조회와 저장 사이에 다른 요청이 먼저 만들 수 있으므로 충돌 시 건너뛰고 다시 조회
+                    categoryRepository.insertIfAbsent(userId, trimmedName, LocalDateTime.now());
+                    return categoryRepository.findByUserIdAndName(userId, trimmedName)
+                            .orElseThrow(() -> new IllegalStateException("카테고리 생성 실패: " + trimmedName));
+                });
     }
 }

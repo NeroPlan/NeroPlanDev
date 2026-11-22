@@ -10,13 +10,17 @@ import com.neroplan.backendPlan.domain.plan.dto.UpdatePlanRequestDto;
 import com.neroplan.backendPlan.domain.plan.service.PlanService;
 import com.neroplan.backendPlan.domain.plan.service.PlanStatsService;
 import com.neroplan.backendPlan.global.apiPayload.ApiResponse;
+import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
+import com.neroplan.backendPlan.global.apiPayload.exception.GeneralException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -38,12 +42,19 @@ public class PlanController {
         return ApiResponse.onSuccess(planService.getPlan(userId, planId));
     }
 
-    // 3. 유저별 전체 조회 - date 파라미터를 붙일지 고민하고 수정 필요
-    // 오늘의 계획만 가져와야함.
+    // 3. 계획 조회 - 파라미터가 없으면 오늘 계획, from/to(YYYY-MM-DD)를 주면 그 기간의 계획 (달력 화면)
     @GetMapping
-    public ApiResponse<List<GetPlanResponseDto>> getPlansByUser(@AuthenticationPrincipal Long userId) {
-        return ApiResponse.onSuccess(planService.getTodayPlansByUserId(userId));
-//        return ApiResponse.onSuccess(planService.getPlansByUserId(userId));
+    public ApiResponse<List<GetPlanResponseDto>> getPlansByUser(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        if (from == null && to == null) {
+            return ApiResponse.onSuccess(planService.getTodayPlansByUserId(userId));
+        }
+        if (from == null || to == null) {
+            throw new GeneralException(ErrorStatus._INVALID_DATE_RANGE);
+        }
+        return ApiResponse.onSuccess(planService.getPlansByDateRange(userId, from, to));
     }
 
     // 8. 오늘 계획 분석 - aiService로 위험도 판정과 재배열을 다시 계산해 추천 수행 순서대로 반환

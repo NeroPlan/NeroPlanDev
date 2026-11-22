@@ -46,11 +46,11 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 // 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인 관련 API는 허용
+                        // 로그인·토큰 재발급·로그아웃은 access token 없이 호출 (재발급은 refresh token 쿠키로 인증)
                         .requestMatchers(
                                 "/",
                                 "/error",
-                                "/api/v1/auth/login/google",
+                                "/api/v1/auth/**",
                                 "/oauth2/**"
                         )
                         .permitAll()
