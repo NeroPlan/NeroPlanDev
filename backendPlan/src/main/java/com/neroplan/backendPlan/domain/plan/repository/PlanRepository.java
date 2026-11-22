@@ -17,4 +17,7 @@ public interface PlanRepository extends JpaRepository<Plan, Long>{
     List<Plan> findByUserIdAndCategoryIsNull(Long userId);
     @EntityGraph(attributePaths = "category")
     List<Plan> findByUserIdAndPlanDate(Long userId, LocalDate planDate);
+    // 달력 조회 - from~to(양 끝 포함) 기간의 계획
+    @EntityGraph(attributePaths = "category")
+    List<Plan> findByUserIdAndPlanDateBetween(Long userId, LocalDate from, LocalDate to);
 }

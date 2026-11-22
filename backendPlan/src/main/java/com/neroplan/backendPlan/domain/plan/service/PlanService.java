@@ -43,6 +43,9 @@ public class PlanService {
     // 분석하기 한 번에 LLM으로 분류할 최대 계획 수 - 미분류 계획이 많이 쌓여도 응답 시간이 끝없이 늘지 않도록 제한
     private static final int MAX_CLASSIFY_PER_REQUEST = 20;
 
+    // 달력 한 번 조회의 최대 기간(일) - 월간 보기는 6주(42일)라 여유 있게 잡음
+    private static final int MAX_RANGE_DAYS = 62;
+
     private final PlanRepository planRepository;
     private final PlanDetailRepository planDetailRepository;
     private final CategoryService categoryService;
@@ -57,11 +60,17 @@ public class PlanService {
         if (userId == null) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
+        LocalDate today = LocalDate.now();
+        LocalDate planDate = requestDto.getPlanDate() != null ? requestDto.getPlanDate() : today;
+        if (planDate.isBefore(today)) {
+            throw new GeneralException(ErrorStatus._INVALID_PLAN_DATE);
+        }
         Plan plan = Plan.builder()
                 .userId(userId)
                 .content(requestDto.getContent())
                 .priority(requestDto.getPriority())
                 .estimatedMinutes(requestDto.getEstimatedMinutes())
+                .planDate(planDate)
                 .build();
 
         // 생성 시에는 aiService를 호출하지 않음 - 카테고리 분류와 재배열은 분석하기(analyzeTodayPlans)에서 수행
@@ -96,6 +105,24 @@ public class PlanService {
                 .map(plan -> GetPlanResponseDto.from(plan, detailsByPlanId.get(plan.getPlanId())))
                 .sorted(Comparator.comparing(GetPlanResponseDto::getRecommendedOrder,
                         Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+    }
+
+    // 3-1. 기간별 조회 (달력) - 날짜순, 같은 날 안에서는 AI 추천 순서 → 생성순
+    @Transactional(readOnly = true)
+    public List<GetPlanResponseDto> getPlansByDateRange(Long userId, LocalDate from, LocalDate to) {
+        if (from.isAfter(to) || from.plusDays(MAX_RANGE_DAYS).isBefore(to)) {
+            throw new GeneralException(ErrorStatus._INVALID_DATE_RANGE);
+        }
+        List<Plan> plans = planRepository.findByUserIdAndPlanDateBetween(userId, from, to);
+        Map<Long, PlanDetail> detailsByPlanId = planDetailRepository.findMapByPlanIn(plans);
+
+        return plans.stream()
+                .map(plan -> GetPlanResponseDto.from(plan, detailsByPlanId.get(plan.getPlanId())))
+                .sorted(Comparator.comparing(GetPlanResponseDto::getPlanDate)
+                        .thenComparing(GetPlanResponseDto::getRecommendedOrder,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(GetPlanResponseDto::getCreatedTime))
                 .toList();
     }
 
