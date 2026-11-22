@@ -9,31 +9,78 @@ import { toPercent } from "../components/common/rateColor";
 import CategoryStats from "../components/AnalysisPage/CategoryStats";
 import RateStats from "../components/AnalysisPage/RateStats";
 import PostponeStats from "../components/AnalysisPage/PostponeStats";
+import CompletionHeatmap from "../components/AnalysisPage/CompletionHeatmap";
+
+// 통계 기간 - days가 없으면 전체
+const PERIODS = [
+    { label: "전체", days: undefined },
+    { label: "최근 30일", days: 30 },
+    { label: "최근 7일", days: 7 },
+] as const;
+
+type PeriodLabel = (typeof PERIODS)[number]["label"];
 
 export default function AnalysisPage() {
-    const [stats, setStats] = useState<PlanStats | null>(null);
+    const [period, setPeriod] = useState<PeriodLabel>("전체");
+    // 응답이 어느 기간 것인지 함께 저장 - 기간을 바꾸면 새 응답이 올 때까지 불러오는 중으로 표시
+    const [loaded, setLoaded] = useState<{ period: PeriodLabel; stats: PlanStats } | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        getPlanStats()
-            .then(setStats)
+        let ignore = false;
+        const days = PERIODS.find((p) => p.label === period)?.days;
+        getPlanStats(days)
+            .then((stats) => {
+                if (ignore) return;
+                setLoaded({ period, stats });
+                setErrorMessage("");
+            })
             .catch((error) => {
+                if (ignore) return;
                 console.error("통계를 불러오지 못했습니다:", error);
                 setErrorMessage(getErrorMessage(error, "통계를 불러오지 못했습니다."));
             });
-    }, []);
+        return () => {
+            ignore = true;
+        };
+    }, [period]);
 
-    if (errorMessage) {
-        return <p className="text-sm text-red-500 text-center">{errorMessage}</p>;
-    }
-
-    if (!stats) {
-        return <p className="text-center text-black">통계를 불러오는 중...</p>;
-    }
+    const stats = loaded?.period === period ? loaded.stats : null;
 
     return (
         <div className="space-y-8">
-            <Summary stats={stats} />
+            <CompletionHeatmap />
+
+            {/* 기간 필터 - 아래 통계에만 적용, 잔디는 항상 최근 12주 */}
+            <div className="grid grid-cols-3 rounded-xl bg-white p-1 text-sm font-semibold shadow-sm">
+                {PERIODS.map((p) => (
+                    <button
+                        key={p.label}
+                        onClick={() => setPeriod(p.label)}
+                        className={`rounded-lg py-2 transition ${
+                            period === p.label ? "bg-slate-900 text-white" : "text-gray-400 hover:text-gray-700"
+                        }`}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
+
+            {errorMessage ? (
+                <p className="text-sm text-red-500 text-center">{errorMessage}</p>
+            ) : !stats ? (
+                <p className="text-center text-black">통계를 불러오는 중...</p>
+            ) : (
+                <PeriodStats stats={stats} period={period} />
+            )}
+        </div>
+    );
+}
+
+function PeriodStats({ stats, period }: { stats: PlanStats; period: PeriodLabel }) {
+    return (
+        <div className="space-y-8">
+            <Summary stats={stats} period={period} />
 
             {stats.recordCount > 0 && (
                 <>
@@ -65,11 +112,13 @@ export default function AnalysisPage() {
     );
 }
 
-function Summary({ stats }: { stats: PlanStats }) {
+function Summary({ stats, period }: { stats: PlanStats; period: PeriodLabel }) {
     if (stats.recordCount === 0) {
         return (
             <section className="bg-white rounded-3xl p-6 shadow-sm text-center space-y-2 text-black">
-                <h2 className="text-xl font-bold">아직 분석할 기록이 없어요</h2>
+                <h2 className="text-xl font-bold">
+                    {period === "전체" ? "아직 분석할 기록이 없어요" : `${period} 동안의 기록이 없어요`}
+                </h2>
                 <p className="text-sm">
                     계획을 완료하거나 하루가 지나면 결과가 쌓이고, 여기에서 내 계획 패턴을 볼 수 있어요.
                 </p>
@@ -85,7 +134,7 @@ function Summary({ stats }: { stats: PlanStats }) {
 
     return (
         <section className="bg-white rounded-3xl p-6 shadow-sm text-center text-black">
-            <p className="text-sm font-semibold">전체 성공률</p>
+            <p className="text-sm font-semibold">{period === "전체" ? "전체 성공률" : `${period} 성공률`}</p>
             <p className="mt-1 text-5xl font-bold">
                 {stats.successRate != null ? toPercent(stats.successRate) : "-"}
             </p>

@@ -13,6 +13,7 @@ import PlanPage from "../pages/PlanPage";
 import AnalysisPage from "../pages/AnalysisPage";
 import OnboardingPage from "../pages/OnboardingPage";
 import ProfileEditPage from "../pages/ProfileEditPage";
+import CategoryPage from "../pages/CategoryPage";
 
 const router = createBrowserRouter([
     {
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
             {
                 path: "edit",
                 element: <ProfileEditPage />,
+            },
+            {
+                path: "categories",
+                element: <CategoryPage />,
             },
         ],
     },
