@@ -74,6 +74,15 @@ public class UserService {
         return UserResponseDto.from(user);
     }
 
+    // 회원 탈퇴 - 프로필 사진과 계정 삭제 (계획 데이터는 프론트가 먼저 backendPlan에 삭제 요청)
+    // 이후 refresh 요청은 사용자가 없어 거부되고, 같은 구글 계정으로 다시 로그인하면 새 계정이 만들어짐
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = findUser(userId);
+        userProfileImageRepository.deleteById(userId);
+        userRepository.delete(user);
+    }
+
     @Transactional(readOnly = true)
     public UserProfileImage getProfileImage(Long userId) {
         return userProfileImageRepository.findById(userId)
