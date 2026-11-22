@@ -71,10 +71,14 @@ const handleLogout = async () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[468px] space-y-6 pb-10">
-      <h1 className="pt-2 text-center text-2xl font-bold text-slate-900">
+    <div className="mx-auto w-full max-w-[26rem] space-y-6 pb-10 lg:max-w-4xl">
+      <h1 className="pt-2 text-center text-2xl font-bold text-slate-900 lg:hidden">
         마이페이지
       </h1>
+
+      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
+      {/* 왼쪽: 프로필과 요약 */}
+      <div className="space-y-6">
 
       {user ? (
         <ProfileCard name={user.nickname} imageUrl={toProfileImageUrl(user.profileImage)} />
@@ -85,7 +89,10 @@ const handleLogout = async () => {
       )}
 
       {user && <SummaryCard summary={summary} errorMessage={summaryError} />}
+      </div>
 
+      {/* 오른쪽: 메뉴 */}
+      <div className="space-y-6">
       <MyPageMenu
         items={[
           {
@@ -111,6 +118,8 @@ const handleLogout = async () => {
       {withdrawError && (
         <p className="text-center text-sm text-red-500">{withdrawError}</p>
       )}
+      </div>
+      </div>
     </div>
   );
 }

@@ -46,7 +46,7 @@ export default function SummaryCard({ summary, errorMessage }: SummaryCardProps)
                     <p className={`mt-1 text-2xl font-bold text-slate-900 ${summary ? "" : "text-slate-300"}`}>
                         {item.value}
                     </p>
-                    <p className="mt-1 text-[11px] text-slate-400">{item.sub}</p>
+                    <p className="mt-1 text-[0.7rem] text-slate-400">{item.sub}</p>
                 </div>
             ))}
         </section>

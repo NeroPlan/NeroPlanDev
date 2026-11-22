@@ -50,10 +50,8 @@ export default function AnalysisPage() {
 
     return (
         <div className="space-y-8">
-            <CompletionHeatmap />
-
-            {/* 기간 필터 - 아래 통계에만 적용, 잔디는 항상 최근 12주 */}
-            <div className="grid grid-cols-3 rounded-xl bg-white p-1 text-sm font-semibold shadow-sm">
+            {/* 기간 필터 - 통계 카드에만 적용, 잔디는 항상 최근 12주 */}
+            <div className="grid grid-cols-3 rounded-xl bg-white p-1 text-sm font-semibold shadow-sm lg:ml-auto lg:w-96">
                 {PERIODS.map((p) => (
                     <button
                         key={p.label}
@@ -68,9 +66,15 @@ export default function AnalysisPage() {
             </div>
 
             {errorMessage ? (
-                <p className="text-sm text-red-500 text-center">{errorMessage}</p>
+                <>
+                    <CompletionHeatmap />
+                    <p className="text-sm text-red-500 text-center">{errorMessage}</p>
+                </>
             ) : !stats ? (
-                <p className="text-center text-black">통계를 불러오는 중...</p>
+                <>
+                    <CompletionHeatmap />
+                    <p className="text-center text-black">통계를 불러오는 중...</p>
+                </>
             ) : (
                 <PeriodStats stats={stats} period={period} />
             )}
@@ -80,8 +84,10 @@ export default function AnalysisPage() {
 
 function PeriodStats({ stats, period }: { stats: PlanStats; period: PeriodLabel }) {
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
             <Summary stats={stats} period={period} />
+
+            <CompletionHeatmap />
 
             {stats.recordCount > 0 && (
                 <>

@@ -197,11 +197,11 @@ export default function FocusPage() {
                     </Link>
                 </section>
             ) : (
-                <>
+                <div className="space-y-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
                     {/* ── 타이머 ── */}
                     <section className="bg-white rounded-3xl p-6 shadow-sm">
                         <p className="text-center text-sm text-gray-400">{session ? "집중 중인 계획" : "집중할 계획"}</p>
-                        <h2 className="mt-1 text-xl font-bold text-center truncate">{activePlan.content}</h2>
+                        <h2 className="mt-1 overflow-x-auto whitespace-nowrap text-center text-xl font-bold [scrollbar-width:thin]" title={activePlan.content}>{activePlan.content}</h2>
                         <p className="mt-1 text-center text-sm text-gray-500">
                             {activePlan.estimatedMinutes != null ? `예상 ${activePlan.estimatedMinutes}분` : "예상 시간 없음"}
                             {activePlan.actualMinutes != null && ` · 지금까지 ${activePlan.actualMinutes}분 집중`}
@@ -209,7 +209,7 @@ export default function FocusPage() {
 
                         <hr className="my-5" />
 
-                        <div className="relative mx-auto h-52 w-52">
+                        <div className="relative mx-auto h-52 w-52 lg:h-72 lg:w-72">
                             <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90">
                                 <circle cx="100" cy="100" r={RING_RADIUS} fill="none" strokeWidth="10" className="stroke-gray-100" />
                                 {/* 첫 바퀴 - 예상 시간까지 */}
@@ -243,7 +243,7 @@ export default function FocusPage() {
                                 <span className="text-xs font-semibold text-gray-400">
                                     {over && hasEstimate ? "예상 시간 초과" : "집중한 시간"}
                                 </span>
-                                <span className="mt-1 text-4xl font-bold tabular-nums text-slate-900">
+                                <span className="mt-1 text-4xl font-bold tabular-nums text-slate-900 lg:text-5xl">
                                     {formatClock(elapsed)}
                                 </span>
                                 <span className="mt-1 text-xs text-gray-400 tabular-nums">
@@ -345,7 +345,7 @@ export default function FocusPage() {
                                                     selected ? "border-slate-900" : "border-gray-100 hover:bg-gray-50"
                                                 } disabled:opacity-40`}
                                             >
-                                                <span className="flex-1 min-w-0 truncate font-semibold">{p.content}</span>
+                                                <span className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap [scrollbar-width:thin] font-semibold" title={p.content}>{p.content}</span>
                                                 <span className="shrink-0 text-sm text-gray-500">
                                                     {p.estimatedMinutes != null ? `${p.estimatedMinutes}분` : "-"}
                                                     {p.actualMinutes != null && (
@@ -362,7 +362,7 @@ export default function FocusPage() {
                             <p className="mt-3 text-center text-xs text-gray-400">다른 계획은 지금 집중을 끝낸 뒤 고를 수 있어요.</p>
                         )}
                     </section>
-                </>
+                </div>
             )}
         </div>
     );
@@ -385,7 +385,7 @@ function ResultCard({ result }: { result: FocusResult }) {
     return (
         <section className="bg-white rounded-3xl p-6 shadow-sm text-center">
             <p className="text-sm text-gray-400">{completed ? "완료" : "기록 저장"}</p>
-            <h2 className="mt-1 text-xl font-bold truncate">{plan.content}</h2>
+            <h2 className="mt-1 overflow-x-auto whitespace-nowrap text-xl font-bold [scrollbar-width:thin]" title={plan.content}>{plan.content}</h2>
             <div className="mt-4 grid grid-cols-2 divide-x divide-gray-100">
                 <div>
                     <p className="text-xs text-gray-400">예상</p>

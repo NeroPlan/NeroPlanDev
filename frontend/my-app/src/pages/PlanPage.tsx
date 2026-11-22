@@ -121,8 +121,9 @@ export default function PlanPage() {
     };
 
     return (
-            <div className="space-y-8">
-
+            <div className="space-y-8 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start lg:gap-8 lg:space-y-0">
+                {/* 왼쪽: 달력 - 스크롤해도 따라옴 */}
+                <div className="space-y-4 lg:sticky lg:top-0">
                 <PlanCalendar
                     view={view}
                     cursor={cursor}
@@ -140,7 +141,10 @@ export default function PlanPage() {
                 {loadError && (
                     <p className="text-sm text-red-500 text-center">{loadError}</p>
                 )}
+                </div>
 
+                {/* 오른쪽: 선택한 날짜의 계획과 분석 */}
+                <div className="space-y-8">
                 <PlanInput
                     key={selectedKey} // 날짜를 바꾸면 입력·수정 중이던 내용 초기화
                     title={`${isSameDay(selected, today) ? "오늘 · " : ""}${formatDayTitle(selected)} 계획`}
@@ -164,6 +168,7 @@ export default function PlanPage() {
                         {analyzedPlans && <AnalysisResult plans={analyzedPlans} />}
                     </>
                 )}
+                </div>
             </div>
     );
 }

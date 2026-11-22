@@ -70,7 +70,7 @@ export default function CompletionHeatmap() {
                 <>
                     <div className="flex gap-1">
                         {/* 요일 - 월/수/금만 표시 */}
-                        <div className="grid grid-rows-[auto_repeat(7,1fr)] gap-1 text-[10px] text-gray-400">
+                        <div className="grid grid-rows-[auto_repeat(7,1fr)] gap-1 text-[0.65rem] text-gray-400">
                             <span className="h-3" />
                             {WEEKDAYS.map((w, i) => (
                                 <span key={w} className="flex items-center leading-none">
@@ -80,7 +80,7 @@ export default function CompletionHeatmap() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <div className="mb-1 grid grid-cols-12 gap-1 text-[10px] text-gray-400 h-3 leading-3">
+                            <div className="mb-1 grid grid-cols-12 gap-1 text-[0.65rem] text-gray-400 h-3 leading-3">
                                 {monthLabels.map((label, i) => (
                                     <span key={i} className="whitespace-nowrap">{label}</span>
                                 ))}
@@ -109,7 +109,7 @@ export default function CompletionHeatmap() {
                     </div>
 
                     {/* 범례 */}
-                    <div className="mt-4 flex items-center justify-end gap-1 text-[10px] text-gray-400">
+                    <div className="mt-4 flex items-center justify-end gap-1 text-[0.65rem] text-gray-400">
                         <span className="mr-1">적음</span>
                         {LEVELS.map((l) => (
                             <span key={l.label} title={l.label} className={`h-3 w-3 rounded-[3px] ${l.className}`} />

@@ -78,7 +78,7 @@ export default function CategoryPage() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-[468px] space-y-6 pb-10">
+        <div className="mx-auto w-full max-w-[26rem] space-y-6 pb-10">
             <h1 className="pt-2 text-center text-2xl font-bold text-slate-900">카테고리 관리</h1>
 
             <p className="text-center text-sm text-slate-500">

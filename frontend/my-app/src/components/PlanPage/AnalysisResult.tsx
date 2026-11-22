@@ -55,9 +55,9 @@ export default function AnalysisResult({
                             <span className="text-lg font-bold text-blue-600">
                                 {p.recommendedOrder}
                             </span>
-                            <div className="flex-1 space-y-1">
+                            <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center gap-2 text-lg font-semibold">
-                                    <span className="flex-1">{p.content}</span>
+                                    <span className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap [scrollbar-width:thin]" title={p.content}>{p.content}</span>
                                     {p.estimatedMinutes != null && (
                                         <span className="text-sm text-gray-500 font-normal">
                                             {p.estimatedMinutes}분

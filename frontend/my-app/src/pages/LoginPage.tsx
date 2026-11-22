@@ -1,9 +1,9 @@
 // pages/LoginPage.tsx
+// 로고 + 한 줄 소개 + 로그인 버튼만 가운데에
 
-import Header from "../components/common/Header";
 import { FcGoogle } from "react-icons/fc";
 import { SiNaver, SiKakaotalk } from "react-icons/si";
-
+import Logo from "../components/common/Logo";
 
 export default function LoginPage() {
     const handleGoogleLogin = () => {
@@ -22,37 +22,37 @@ export default function LoginPage() {
     };
 
     return (
-            <div className="flex flex-col items-center justify-start h-screen pt-60">
-                <Header />
-                <main className="flex-1 flex items-start justify-cefhnter pt-5">
-                    <div className="flex min-h-screen items-center justify-center">
-                        <div className="flex flex-col gap-12 w-64">
-                            <button
-                                onClick={handleGoogleLogin}
-                                className="flex items-center justify-center gap-3 rounded-2xl border border-gray-300 bg-white py-3 px-5 text-xl font-semibold shadow-md transition hover:-translate-y-1 hover:shadow-xl"
-                            >
-                                <FcGoogle size={32} />
-                                <span>Google 로그인</span>
-                            </button>
-    
-                            <button
-                                onClick={handleCacaoLogin}
-                                className="flex items-center justify-center gap-3 rounded-2xl bg-[#FEE500] py-3 px-5 text-xl font-semibold text-black shadow-md transition hover:-translate-y-1 hover:shadow-xl"
-                            >
-                                <SiKakaotalk size={30} />
-                                <span>카카오 로그인</span>
-                            </button>
-    
-                            <button
-                                onClick={handleNaverLogin}
-                               className="flex items-center justify-center gap-3 rounded-2xl bg-[#03C75A] py-3 px-5 text-xl font-semibold text-white shadow-md transition hover:-translate-y-1 hover:shadow-xl"
-                            >
-                                <SiNaver size={28} />
-                                <span>네이버 로그인</span>
-                            </button>
-                        </div> 
-                    </div>
-                </main>
+        <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-5 py-12">
+            <div className="w-full max-w-sm text-center">
+                <Logo size={48} />
+                <p className="mt-5 whitespace-nowrap text-slate-500">하루 계획을 나에게 꼭 맞게 다듬는 AI 플래너</p>
+
+                <div className="mt-10 flex flex-col gap-3 rounded-3xl bg-white p-6 shadow-sm">
+                    <button
+                        onClick={handleGoogleLogin}
+                        className="flex items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:bg-gray-50"
+                    >
+                        <FcGoogle size={24} />
+                        <span>Google로 계속하기</span>
+                    </button>
+
+                    <button
+                        onClick={handleCacaoLogin}
+                        className="flex items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-5 py-3.5 font-semibold text-black transition hover:brightness-95"
+                    >
+                        <SiKakaotalk size={22} />
+                        <span>카카오로 계속하기</span>
+                    </button>
+
+                    <button
+                        onClick={handleNaverLogin}
+                        className="flex items-center justify-center gap-3 rounded-2xl bg-[#03C75A] px-5 py-3.5 font-semibold text-white transition hover:brightness-95"
+                    >
+                        <SiNaver size={18} />
+                        <span>네이버로 계속하기</span>
+                    </button>
+                </div>
             </div>
-        );
+        </div>
+    );
 }

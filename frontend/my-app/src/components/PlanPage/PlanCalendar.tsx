@@ -160,7 +160,7 @@ function WeekCell({ date, plans, selected, today, onClick }: CellProps) {
                     />
                 ))}
             </div>
-            <span className={`text-[10px] ${selected ? "text-slate-300" : "text-gray-400"}`}>
+            <span className={`text-[0.65rem] ${selected ? "text-slate-300" : "text-gray-400"}`}>
                 {plans.length > 0 ? `${done}/${plans.length}` : "–"}
             </span>
         </button>
@@ -172,7 +172,7 @@ function MonthCell({ date, plans, selected, today, outside, onClick }: CellProps
     return (
         <button
             onClick={onClick}
-            className={`flex h-[72px] flex-col items-stretch gap-0.5 rounded-lg border px-0.5 pt-1 text-left transition ${
+            className={`flex h-[4.5rem] flex-col items-stretch gap-0.5 rounded-lg border px-0.5 pt-1 text-left transition ${
                 selected ? "border-slate-900 bg-slate-50" : "border-transparent hover:bg-gray-50"
             } ${outside ? "opacity-35" : ""}`}
         >
@@ -186,12 +186,12 @@ function MonthCell({ date, plans, selected, today, outside, onClick }: CellProps
             {plans.slice(0, 2).map((p) => (
                 <span
                     key={p.planId}
-                    className={`truncate rounded px-1 text-[9px] leading-[14px] ${STATE_STYLES[getPlanState(p)].chip}`}
+                    className={`truncate rounded px-1 text-[0.6rem] leading-[0.95rem] ${STATE_STYLES[getPlanState(p)].chip}`}
                 >
                     {p.content}
                 </span>
             ))}
-            {plans.length > 2 && <span className="px-1 text-[9px] text-gray-400">+{plans.length - 2}</span>}
+            {plans.length > 2 && <span className="px-1 text-[0.6rem] text-gray-400">+{plans.length - 2}</span>}
         </button>
     );
 }
