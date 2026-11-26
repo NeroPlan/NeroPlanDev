@@ -10,6 +10,7 @@ import type { CalendarView } from "../components/PlanPage/calendarDate";
 import { getErrorMessage } from "../api/api";
 import { analyzePlans, getPlansInRange } from "../api/plan";
 import type { Plan } from "../api/plan";
+import { loadAnalysis, saveAnalysis } from "../components/PlanPage/analysisCache";
 
 export default function PlanPage() {
     const today = useMemo(() => new Date(), []);
@@ -23,7 +24,7 @@ export default function PlanPage() {
     const [loadedRange, setLoadedRange] = useState(""); // 마지막으로 응답을 받은 기간 - 보이는 기간과 다르면 불러오는 중
     const [loadError, setLoadError] = useState("");
 
-    const [analyzedPlans, setAnalyzedPlans] = useState<Plan[] | null>(null); // 분석하기 전에는 null
+    const [analyzedPlans, setAnalyzedPlans] = useState<Plan[] | null>(() => loadAnalysis(todayKey)); // 분석하기 전에는 null - 다른 페이지에 다녀와도 오늘 분석 결과는 유지
     const [analyzing, setAnalyzing] = useState(false);
     const [analyzeError, setAnalyzeError] = useState("");
 
@@ -109,7 +110,9 @@ export default function PlanPage() {
         try {
             const result = await analyzePlans();
 
-            setAnalyzedPlans(result.filter((p) => p.status === "TODO"));
+            const todoPlans = result.filter((p) => p.status === "TODO");
+            setAnalyzedPlans(todoPlans);
+            saveAnalysis(todayKey, todoPlans);
             // 오늘 칸도 추천 순서·분류 결과로 갱신
             setPlans((prev) => [...prev.filter((p) => p.planDate !== todayKey), ...result]);
         } catch (error) {
