@@ -25,6 +25,9 @@ public interface PlanRepository extends JpaRepository<Plan, Long>{
     @EntityGraph(attributePaths = "category")
     List<Plan> findByUserIdAndPlanDateBetween(Long userId, LocalDate from, LocalDate to);
 
+    // 카테고리 관리 - 한 카테고리로 분류된 계획 (최근 수행일부터)
+    List<Plan> findByUserIdAndCategoryCategoryIdOrderByPlanDateDescCreatedTimeDesc(Long userId, Long categoryId);
+
     // 카테고리 관리 - 카테고리별 계획 수 [categoryId, count]
     @Query("SELECT p.category.categoryId, COUNT(p) FROM Plan p WHERE p.userId = :userId AND p.category IS NOT NULL GROUP BY p.category.categoryId")
     List<Object[]> countByCategory(@Param("userId") Long userId);

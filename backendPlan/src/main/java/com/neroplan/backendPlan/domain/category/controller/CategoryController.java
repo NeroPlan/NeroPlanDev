@@ -3,6 +3,7 @@ package com.neroplan.backendPlan.domain.category.controller;
 import com.neroplan.backendPlan.domain.category.dto.GetCategoryResponseDto;
 import com.neroplan.backendPlan.domain.category.dto.UpdateCategoryRequestDto;
 import com.neroplan.backendPlan.domain.category.service.CategoryService;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
 import com.neroplan.backendPlan.global.apiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,14 @@ public class CategoryController {
     @GetMapping
     public ApiResponse<List<GetCategoryResponseDto>> getCategories(@AuthenticationPrincipal Long userId) {
         return ApiResponse.onSuccess(categoryService.getCategories(userId));
+    }
+
+    // 4. 카테고리에 속한 계획 목록 - 최근 수행일부터
+    @GetMapping("/{categoryId}/plans")
+    public ApiResponse<List<GetPlanResponseDto>> getCategoryPlans(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long categoryId) {
+        return ApiResponse.onSuccess(categoryService.getPlans(userId, categoryId));
     }
 
     // 2. 이름 변경

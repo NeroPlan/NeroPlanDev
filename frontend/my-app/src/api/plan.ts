@@ -190,7 +190,13 @@ export const getCategories = async (): Promise<Category[]> => {
     return response.data.result;
 };
 
-export const renameCategory = async (categoryId: number, name: string): Promise<Category> => {
+// 카테고리에 분류된 계획 목록 - 최근 수행일부터
+export const getCategoryPlans = async (categoryId: number): Promise<Plan[]> => {
+    const response = await api.get(`/api/v1/plans/categories/${categoryId}/plans`);
+    return response.data.result;
+};
+
+export const renameCategory =async (categoryId: number, name: string): Promise<Category> => {
     const response = await api.patch(`/api/v1/plans/categories/${categoryId}`, { name });
     return response.data.result;
 };

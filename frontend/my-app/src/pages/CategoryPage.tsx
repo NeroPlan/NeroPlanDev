@@ -1,10 +1,11 @@
 // pages/CategoryPage.tsx
-// 카테고리 관리 - AI가 분류한 카테고리 목록, 이름 변경, 삭제(계획을 다른 카테고리로 옮기거나 미분류로)
+// 카테고리 관리 - AI가 분류한 카테고리 목록, 속한 계획 보기, 이름 변경, 삭제(계획을 다른 카테고리로 옮기거나 미분류로)
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getErrorMessage } from "../api/api";
-import { deleteCategory, getCategories, renameCategory } from "../api/plan";
-import type { Category } from "../api/plan";
+import { deleteCategory, getCategories, getCategoryPlans, renameCategory } from "../api/plan";
+import type { Category, Plan } from "../api/plan";
+import { toDateKey } from "../components/PlanPage/calendarDate";
 
 const MAX_CATEGORY_NAME_LENGTH = 50; // backendPlan category.name 컬럼 길이
 
@@ -20,6 +21,11 @@ export default function CategoryPage() {
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
+    // 펼친 카테고리와 불러온 계획 목록 - 한 번 불러온 카테고리는 다시 펼쳐도 요청하지 않음
+    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [plansByCategory, setPlansByCategory] = useState<Record<number, Plan[]>>({});
+    const [plansError, setPlansError] = useState<Record<number, string>>({});
+
     useEffect(() => {
         getCategories()
             .then(setCategories)
@@ -28,6 +34,26 @@ export default function CategoryPage() {
                 setErrorMessage(getErrorMessage(error, "카테고리를 불러오지 못했습니다."));
             });
     }, []);
+
+    const toggleExpand = (categoryId: number) => {
+        if (expandedId === categoryId) {
+            setExpandedId(null);
+            return;
+        }
+        setExpandedId(categoryId);
+        if (plansByCategory[categoryId]) return;
+
+        setPlansError((prev) => ({ ...prev, [categoryId]: "" }));
+        getCategoryPlans(categoryId)
+            .then((plans) => setPlansByCategory((prev) => ({ ...prev, [categoryId]: plans })))
+            .catch((error) => {
+                console.error("계획 목록을 불러오지 못했습니다:", error);
+                setPlansError((prev) => ({
+                    ...prev,
+                    [categoryId]: getErrorMessage(error, "계획 목록을 불러오지 못했습니다."),
+                }));
+            });
+    };
 
     const cancel = () => {
         setMode({ type: "view" });
@@ -68,6 +94,14 @@ export default function CategoryPage() {
                         c.categoryId === target ? { ...c, planCount: c.planCount + (removed?.planCount ?? 0) } : c
                     );
             });
+            // 삭제한 카테고리와 계획을 넘겨받은 카테고리는 목록이 달라졌으므로 다시 불러오도록 비움
+            setPlansByCategory((prev) => {
+                const next = { ...prev };
+                delete next[categoryId];
+                if (target !== undefined) delete next[target];
+                return next;
+            });
+            if (expandedId === categoryId || expandedId === target) setExpandedId(null);
             cancel();
         } catch (error) {
             console.error("카테고리를 삭제하지 못했습니다:", error);
@@ -158,32 +192,54 @@ export default function CategoryPage() {
                             );
                         }
 
+                        const expanded = expandedId === c.categoryId;
                         return (
-                            <div key={c.categoryId} className={`flex items-center gap-3 px-6 py-5 ${border}`}>
-                                <div className="flex-1 min-w-0">
-                                    <p className="truncate text-base font-semibold text-slate-900">{c.name}</p>
-                                    <p className="text-xs text-slate-400">계획 {c.planCount}개</p>
+                            <div key={c.categoryId} className={border}>
+                                <div className="flex items-center gap-3 px-6 py-5">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleExpand(c.categoryId)}
+                                        aria-expanded={expanded}
+                                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                                    >
+                                        <span
+                                            className={`text-xs text-slate-400 transition-transform ${expanded ? "rotate-90" : ""}`}
+                                            aria-hidden
+                                        >
+                                            ▶
+                                        </span>
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-base font-semibold text-slate-900">{c.name}</span>
+                                            <span className="block text-xs text-slate-400">계획 {c.planCount}개</span>
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setErrorMessage("");
+                                            setMode({ type: "rename", categoryId: c.categoryId, name: c.name });
+                                        }}
+                                        className="text-sm font-semibold text-slate-500 hover:text-slate-900"
+                                    >
+                                        이름 변경
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setErrorMessage("");
+                                            setMode({ type: "delete", categoryId: c.categoryId, moveTo: "" });
+                                        }}
+                                        className="text-sm font-semibold text-red-500 hover:text-red-600"
+                                    >
+                                        삭제
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setErrorMessage("");
-                                        setMode({ type: "rename", categoryId: c.categoryId, name: c.name });
-                                    }}
-                                    className="text-sm font-semibold text-slate-500 hover:text-slate-900"
-                                >
-                                    이름 변경
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setErrorMessage("");
-                                        setMode({ type: "delete", categoryId: c.categoryId, moveTo: "" });
-                                    }}
-                                    className="text-sm font-semibold text-red-500 hover:text-red-600"
-                                >
-                                    삭제
-                                </button>
+                                {expanded && (
+                                    <CategoryPlanList
+                                        plans={plansByCategory[c.categoryId]}
+                                        error={plansError[c.categoryId]}
+                                    />
+                                )}
                             </div>
                         );
                     })}
@@ -202,6 +258,43 @@ export default function CategoryPage() {
                 마이페이지로
             </button>
         </div>
+    );
+}
+
+const STATUS_STYLE = {
+    done: { label: "완료", className: "bg-emerald-50 text-emerald-600" },
+    missed: { label: "미완료", className: "bg-slate-100 text-slate-500" },
+    upcoming: { label: "예정", className: "bg-sky-50 text-sky-600" },
+};
+
+// 펼친 카테고리의 계획 목록 - 최근 수행일부터, 어떤 계획이 이 이름으로 묶였는지 확인용
+function CategoryPlanList({ plans, error }: { plans?: Plan[]; error?: string }) {
+    if (error) return <p className="px-6 pb-5 text-sm text-red-500">{error}</p>;
+    if (!plans) return <p className="px-6 pb-5 text-sm text-slate-400">불러오는 중...</p>;
+    if (plans.length === 0) return <p className="px-6 pb-5 text-sm text-slate-400">이 카테고리에 계획이 없어요.</p>;
+
+    const todayKey = toDateKey(new Date());
+    return (
+        <ul className="mx-6 mb-5 max-h-72 space-y-1 overflow-y-auto rounded-2xl bg-slate-50 p-2">
+            {plans.map((p) => {
+                const status =
+                    p.status === "DONE" ? STATUS_STYLE.done : p.planDate < todayKey ? STATUS_STYLE.missed : STATUS_STYLE.upcoming;
+                const [, month, day] = p.planDate.split("-");
+                return (
+                    <li key={p.planId} className="flex items-center gap-3 rounded-xl px-3 py-2">
+                        <span className="w-11 shrink-0 text-xs tabular-nums text-slate-400">
+                            {Number(month)}/{Number(day)}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-slate-800" title={p.content}>
+                            {p.content}
+                        </span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${status.className}`}>
+                            {status.label}
+                        </span>
+                    </li>
+                );
+            })}
+        </ul>
     );
 }
 

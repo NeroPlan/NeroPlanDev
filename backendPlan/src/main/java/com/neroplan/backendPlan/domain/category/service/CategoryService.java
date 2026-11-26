@@ -3,6 +3,7 @@ package com.neroplan.backendPlan.domain.category.service;
 import com.neroplan.backendPlan.domain.category.dto.GetCategoryResponseDto;
 import com.neroplan.backendPlan.domain.category.entity.Category;
 import com.neroplan.backendPlan.domain.category.repository.CategoryRepository;
+import com.neroplan.backendPlan.domain.plan.dto.GetPlanResponseDto;
 import com.neroplan.backendPlan.domain.plan.repository.PlanRepository;
 import com.neroplan.backendPlan.global.apiPayload.code.status.ErrorStatus;
 import com.neroplan.backendPlan.global.apiPayload.exception.GeneralException;
@@ -33,6 +34,16 @@ public class CategoryService {
         return categoryRepository.findByUserIdOrderByCategoryIdAsc(userId).stream()
                 .map(category -> GetCategoryResponseDto.from(category,
                         counts.getOrDefault(category.getCategoryId(), 0L)))
+                .toList();
+    }
+
+    // 5. 카테고리에 속한 계획 목록 - 이름을 바꾸기 전에 어떤 계획이 묶여 있는지 확인용
+    @Transactional(readOnly = true)
+    public List<GetPlanResponseDto> getPlans(Long userId, Long categoryId) {
+        findCategory(userId, categoryId);
+        return planRepository.findByUserIdAndCategoryCategoryIdOrderByPlanDateDescCreatedTimeDesc(userId, categoryId)
+                .stream()
+                .map(GetPlanResponseDto::from)
                 .toList();
     }
 
